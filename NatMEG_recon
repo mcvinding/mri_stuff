@@ -1,0 +1,66 @@
+#!/bin/sh
+# Template for doing FreeSurfer recon-all on subjects.
+
+if [[ -z "$@" ]]
+then
+	echo "Use as: NatMEG_recon [megID] [T1-sequence-number] [out_dir] [subid(if not same as megID)]"
+	exit 1
+fi
+
+# --------------------------- #
+megId=$1
+t1_nr=$2
+if [ $3 ]; then
+	export SUBJECTS_DIR="$3"	
+else
+	echo "Warning OUT_DIR not set. Use FS dir from enviromen: $SUBJECTS_DIR"
+	read -rsp "[press SPACE to confirm or anything else to cancel]" -n1 ans
+	if [ ! $ans = ' ' ]; then
+		echo ''
+		exit 1
+	fi
+fi
+if [ $4 ]; then
+	subId="$4"
+else
+	subId="$1"
+fi
+echo "MEG id = $megId, MR seq. = $t1_nr, fs output id = $subId"
+# --------------------------- #
+
+export FREESURFER_HOME=/opt/freesurfer
+source $FREESURFER_HOME/SetUpFreeSurfer.sh
+export SUBJECTS_DIR=/home/mikkel/PD_motor/fs_subjects_dir
+echo "Subjects dir = $SUBJECTS_DIR"
+
+MRI_archive='/archive/50001_MR_archive'
+MRI_subDir=$(find $MRI_archive -maxdepth 1 -type d -name "*$megId*" | awk 'NR==1')
+echo $MRI_subDir
+#dcmPath="$MRI_subDir/0000000$t1_nr"
+dcmPath=$(find $MRI_subDir -maxdepth 1 -type d -name "*$t1_nr" | awk 'NR==1')
+
+if [[ -d $dcmPath ]]; then 
+	echo "$dcmPath is folder"
+	export fname=$(find $dcmPath -maxdepth 1 -type f -name "*001.dcm" | awk 'NR==1')
+	
+else
+	echo '-------------- Not right path! Try again --------------------'
+	if [ -z "$2" ]; then
+		echo "Hint: You are missing MR sequence as argument"
+		ls $MRI_subDir
+	fi
+	ls $MRI_archive
+	return
+fi
+echo '------------------------------------------------------------'
+echo "---------- Now running recon-all on $subId -----------------"
+echo '------------------------------------------------------------'
+
+###### Run Freesurfer ######
+recon-all -subjid $subId -i $fname -all
+
+echo '------------------------------------------------------------'
+echo "------------------- DONE $subId ----------------------------"
+echo '------------------------------------------------------------'
+
+cd $SUBJECTS_DIR/$subId/mri
