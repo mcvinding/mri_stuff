@@ -1,0 +1,46 @@
+#!/bin/bash
+## Set up freesurfer for projects
+
+if [[ -z "$@" ]]
+then
+	echo "Use as: ./setup_proj.sh [project name] "
+	echo 
+	echo "Project name must be a folder in home directory. And assuming fs_subjects_dir is in that"
+	echo "folder, if not, it will create it."
+	exit 1
+fi
+
+proj=$1
+
+if  [[ ! -d ~/$proj ]]; then
+	echo "Folder for project $proj does not exist"
+	exit 1	
+fi
+
+
+if [[ ! -d ~/$proj/fs_subjects_dir ]]
+	echo "There is no fs_subjects_dir in $proj. Will create one"
+	mkdir ~/$proj/fs_subjects_dir
+fi
+
+if [[ ! -d ~/$proj/scripts ]]
+	echo "There is no scripts dir in $proj. Will create one"
+	mkdir ~/$proj/fs_subjects_dir
+fi
+	
+export FREESURFER_HOME=/opt/freesurfer
+source $FREESURFER_HOME/SetUpFreeSurfer.sh
+
+export SUBJECTS_DIR=~/$proj/fs_subjects_dir
+echo $SUBJECTS_DIR
+
+# Shortcuts
+alias gotoSubdir='cd $SUBJECTS_DIR'
+alias gotoProj="cd ~/$proj"
+#alias gotoRaw="cd /archive/20057_working_memory/MEG"
+alias gotoScripts="cd ~/$proj/scripts"
+
+
+
+
+
