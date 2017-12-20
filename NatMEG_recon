@@ -13,12 +13,20 @@ t1_nr=$2
 if [ $3 ]; then
 	export SUBJECTS_DIR="$3"	
 else
-	echo "Warning OUT_DIR not set. Use FS dir from enviromen: $SUBJECTS_DIR"
-	read -rsp "[press SPACE to confirm or anything else to cancel]" -n1 ans
-	if [ ! $ans = ' ' ]; then
-		echo ''
-		exit 1
-	fi
+	if [[ -v $SUBJECTS_DIR ]]; then
+		echo "Warning OUT_DIR not set. Use FS dir from enviromen: $SUBJECTS_DIR"
+		read -rsp "[press SPACE to confirm or anything else to cancel]" -n1 ans
+		if [ ! $ans = ' ' ]; then
+			echo ''
+			exit 1
+		fi
+	else
+		echo "Warning OUT_DIR not set and found no SUBJECTS_DIR. Will put output in current dir: $(pwd)"
+		read -rsp "[press SPACE to confirm or anything else to cancel]" -n1 ans
+		if [ ! $ans = ' ' ]; then
+			echo ''
+			exit 1
+		fi
 fi
 if [ $4 ]; then
 	subId="$4"
@@ -30,7 +38,6 @@ echo "MEG id = $megId, MR seq. = $t1_nr, fs output id = $subId"
 
 export FREESURFER_HOME=/opt/freesurfer
 source $FREESURFER_HOME/SetUpFreeSurfer.sh
-export SUBJECTS_DIR=/home/mikkel/PD_motor/fs_subjects_dir
 echo "Subjects dir = $SUBJECTS_DIR"
 
 MRI_archive='/archive/50001_MR_archive'
