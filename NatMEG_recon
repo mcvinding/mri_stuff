@@ -3,7 +3,7 @@
 
 if [[ -z "$@" ]]
 then
-	echo "Use as: NatMEG_recon [megID] [T1-sequence-number] [out_dir] [subid(if not same as megID)]"
+	echo "Use as: ./NatMEG_recon [megID] [T1-sequence-number] [out_dir] [subid(if not same as megID)]"
 	exit 1
 fi
 
