@@ -6,4 +6,5 @@ I will update functions to make them globally available. Functions are made to r
 
 Tools:
 * Wrapper that run Freesurfer on raw MRI dicom and arange output according to project
-* BEM models using multiecho sequences (similar mne_flash_bem) on GE scanner.
+* BEM models using multiecho sequences (similar mne_flash_bem) on GE scanner (not complete).
+* Quick sorting of DICOM files (not working).
