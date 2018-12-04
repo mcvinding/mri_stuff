@@ -55,7 +55,7 @@ else
 fi
 
 # FIND FILE AS INPUT
-echo "Searching for right file in $dcmPath... this takes a while"
+echo "Searching for right file in $dcmPath. This takes a while"
 fileExtension="IMA"
 OUTPUT="$(dcmunpack -src $dcmPath -ext $fileExtension)"
 array=($OUTPUT)
@@ -68,7 +68,7 @@ do
 done
 
 #Let it run recon-all and crash (there might be a way around this!)
-echo "Running recon-all but expecting it to crash!"
+echo "Converting $convertFile"
 #TESTVAR="$(recon-all -subjid $subId -i $fname -all)"
 #echo "IGNORE WARNINGS ABOVE"
 
@@ -76,33 +76,23 @@ convertFile=/home/mikkel/PD_motor/temp/$subId_convert.mgz
 
 mri_convert -it siemens -ot mgz $fname $convertFile
 
-#cd $SUBJECTS_DIR/$subId/mri/orig
-#echo "Copying $SUBJECTS_DIR/$subId/mri/orig/001.mgz to $SUBJECTS_DIR/$subId/mri/orig/too_many_frames.mgz for future use"
-#mv $SUBJECTS_DIR/$subId/mri/orig/001.mgz $SUBJECTS_DIR/$subId/mri/orig/too_many_frames.mgz
-#mri_convert -nth 0 $SUBJECTS_DIR/$subId/mri/orig/too_many_frames.mgz 001.mgz
+cd $SUBJECTS_DIR/$subId/mri/orig
+echo "Copying $SUBJECTS_DIR/$subId/mri/orig/001.mgz to $SUBJECTS_DIR/$subId/mri/orig/too_many_frames.mgz for future use"
+mv $SUBJECTS_DIR/$subId/mri/orig/001.mgz $SUBJECTS_DIR/$subId/mri/orig/too_many_frames.mgz
+mri_convert -nth 0 $SUBJECTS_DIR/$subId/mri/orig/too_many_frames.mgz 001.mgz
 cd $SUBJECTS_DIR
 
 echo '------------------------------------------------------------'
 echo "---------- Now running recon-all on $subId -----------------"
 echo '------------------------------------------------------------'
 
-recon-all -subjid $subId -all -no-isrunning -i $convertFile
+recon-all -subjid $subId -autorecon1 -autorecon2 -autorecon3 -no-isrunning
 
 echo '------------------------------------------------------------'
 echo "------------------- DONE $subId ----------------------------"
 echo '------------------------------------------------------------'
 
 cd $SUBJECTS_DIR/$subId/mri
-
-
-
-
-
-
-
-
-
-
 
 
 
