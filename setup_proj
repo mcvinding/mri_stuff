@@ -37,10 +37,6 @@ echo $SUBJECTS_DIR
 # Shortcuts
 alias gotoSubdir='cd $SUBJECTS_DIR'
 alias gotoProj="cd ~/$proj"
-#alias gotoRaw="cd /archive/20057_working_memory/MEG"
 alias gotoScripts="cd ~/$proj/scripts"
 
-
-
-
-
+# - END - 

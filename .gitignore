@@ -1,0 +1,6 @@
+# Ignore folders
+./old/
+
+# Ignore temp
+.sh~
+.md~

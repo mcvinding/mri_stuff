@@ -1,9 +1,11 @@
-#!/bin/sh
-# Template for doing FreeSurfer recon-all on subjects.
+#!/bin/bash
+# Wrapper for doing FreeSurfer recon-all on subjects.
 
 if [[ -z "$@" ]]
 then
-	echo "Use as: ./NatMEG_recon [megID] [T1-sequence-number] [out_dir] [subid(if not same as megID)]"
+	echo ""
+	echo "Use as: ./NatMEG_recon [megID] [T1-sequence-name] [out_dir] [subid(if not same as megID)]"
+	echo ""
 	exit 1
 fi
 
@@ -14,12 +16,12 @@ if [ $3 ]; then
 	export SUBJECTS_DIR="$3"	
 else
 	if [[ -v $SUBJECTS_DIR ]]; then
-		echo "Warning OUT_DIR not set. Use FS dir from enviromen: $SUBJECTS_DIR"
-		read -rsp "[press SPACE to confirm or anything else to cancel]" -n1 ans
-		if [ ! $ans = ' ' ]; then
-			echo ''
-			exit 1
-		fi
+		echo "Warning OUT_DIR not set. Use SUBJECTS_DIR from enviromen: $SUBJECTS_DIR"
+#		read -rsp "[press SPACE to confirm or anything else to cancel]" -n1 ans
+#		if [ ! $ans = ' ' ]; then
+#			echo ''
+#			exit 1
+#		fi
 	else
 		echo "Warning OUT_DIR not set and found no SUBJECTS_DIR. Will put output in current dir: $(pwd)"
 		read -rsp "[press SPACE to confirm or anything else to cancel]" -n1 ans
