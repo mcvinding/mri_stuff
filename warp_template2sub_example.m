@@ -1,42 +1,29 @@
 % Warp template MRI to subject MRI and do source reconstruction.
 % addpath '~/fieldtrip/fieldtrip/'
 % addpath '~/fieldtrip/fieldtrip/external/mne'
-
-if ispc
-    addpath C:\Users\Mikkel\Documents\MATLAB
-    [dirs, sub_info, lh_subs] = PD_proj_setup_WIN('tap');
-    addpath C:\fieldtrip\external\mne
-    mri_path = 'Z:\PD_motor\fs_subjects_dir';
-    out_path = 'Z:\PD_motor\MRI';
-else
-    addpath /home/mikkel/PD_motor/global_scripts
-    [dirs, sub_info, lh_subs] = PD_proj_setup('tap');
-    mri_path = '/home/mikkel/PD_motor/fs_subjects_dir';
-    out_path = '/home/mikkel/PD_motor/MRI'; 
-end
-
 ft_defaults
 
-rawmri_path = '..';
 fs_path = '/home/mikkel/PD_motor/fs_subjects_dir';
-% fs_path = 'Z:\PD_motor\fs_subjects_dir'
-% mri_outpath = 
+mri_path = '/home/mikkel/PD_motor/MRI';
+
+%% Options
 sub = '0362';  %Change if loop
 
 %% Load template MRI
 load standard_mri  % Load Colin 27
 mri_colin = mri;
 
-%% Load subject MRI (Not working on WIN PC)
-% dicom_name = '00000001.dcm';
-% dicom_path = fullfile(rawmri_path, 'dicoms', subjects{1}, dicom_name);
+%% Step 1: Convert Load subject MRI (Option 1: from Freesurfer)
+% NB: not working on WIN PC
 
+% Read MRI
 orig_fpath = fullfile(fs_path,sub,'mri/orig.mgz');
- 
 mri_orig = ft_read_mri(orig_fpath);
 
+% Define coordinates
 mri_coord = ft_determine_coordsys(mri_orig, 'interactive', 'yes');
 
+% Convert to acpc format [why the two step procedure?]
 cfg = [];
 cfg.method = 'interactive';
 cfg.coordsys = 'neuromag';
@@ -49,18 +36,44 @@ mri_acap = ft_convert_coordsys(mri_realigned, 'acpc');
 cfg = [];
 cfg.filetype    = 'nifti';          % .nii exntension
 cfg.parameter   = 'anatomy';
-cfg.filename    = fullfile(fs_path,sub,'mri/orig');   % Same base filename but different format
+cfg.filename    = fullfile(mri_path,sub,'mri/orig');   % Same base filename but different format
 ft_volumewrite(cfg, mri_acap)
 
-save(fullfile(fs_path,sub,'mri/template_morphed.mgz'));
+% save(fullfile(fs_path,sub,'mri/template_morphed.mgz'));
 
-%% Normalize
-mri_orig = ft_read_mri(fullfile(fs_path,sub,'mri/orig.nii'));
+%% Step 1: Load subject MRI (Option 2: from FieldTrip)
 
+% Read MRI
+orig_fpath = fullfile(mri_path,sub,'mri.mat');
+load(orig_fpath)
+
+% Define coordinates
+mri_coord = ft_determine_coordsys(mri, 'interactive', 'yes');
+
+% Convert to acpc format [why the two step procedure: because finding ac and pc point is difficult]
 cfg = [];
-cfg.template = fullfile(fs_path,sub,'mri/orig.nii');
+cfg.method = 'interactive';
+cfg.coordsys = 'neuromag';
+mri_realigned = ft_volumerealign(cfg, mri_coord);
+
+mri_acap = ft_convert_coordsys(mri_realigned, 'spm');
+
+% Save subject volume as the "template". The template anatomy should always
+% be stored in a SPM-compatible file
+cfg = [];
+cfg.filetype    = 'nifti';          % .nii exntension
+cfg.parameter   = 'anatomy';
+cfg.filename    = fullfile(mri_path,sub,'orig');   % Same base filename but different format
+ft_volumewrite(cfg, mri_acap)
+
+%% Normalize: template -> subject
+
+% Non-linear normalization
+cfg = [];
+cfg.template = fullfile(mri_path,sub,'orig.nii');
 mri_norm = ft_volumenormalise(cfg, mri_colin);
 
+% Linear normalization for comparison
 cfg.nonlinear = 'no';
 mri_normL = ft_volumenormalise(cfg, mri_colin);
 
@@ -68,13 +81,15 @@ mri_norm = ft_determine_units(mri_norm);
 mri_normL = ft_determine_units(mri_normL);
 
 %% Plot
-ft_sourceplot([],mri_colin); title('Colins')
+ft_sourceplot([],mri_colin); title('Colin')
 ft_sourceplot([],mri_norm); title('Norm')
 ft_sourceplot([],mri_normL); title('Norm (linear)')
 
-ft_sourceplot([],mri_coord); title('Sub')
+ft_sourceplot([],mri_acap); title('Sub')
 
-%% Preapre for Freesurfer (testing)
+%% Preapre for Freesurfer
+% I have still not tested how the normalized MRI run in Freesurfer.
+
 cfg = [];
 cfg.output = 'brain';
 seg = ft_volumesegment(cfg, mri_norm);

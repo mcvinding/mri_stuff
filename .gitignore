@@ -1,6 +1,6 @@
 # Ignore folders
-./old/
+old/
 
 # Ignore temp
-.sh~
-.md~
+*~
+*.pyc
