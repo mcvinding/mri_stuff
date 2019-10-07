@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-#    This script creates the BEM meshes using flash images
+#    This script creates the BEM meshes using multiecho/flash images
 #
 #    Before running this script:
 #
@@ -8,10 +8,11 @@
 #    2. Create symbolic links to make flash05 and flash30 point to the appropriate series
 #       The echos should be numbered 001 ... 008 under each of these directories
 #    3. Set SUBJECTS_DIR and SUBJECT environment variables appropriately
-#    4. cd to the directory where flash05 (flash06) is
+#    4. cd to the directory where flash05 (edit: flash06) is
 #    5. Run this script without any arguments
 #
-#       
+#   Revised script for running "flash" image BEM from multiecho sequences from GE scanner at KI. I do not guarantee that it will work for any other type of sequency. Edited by @mcvinding. Original copyright below.
+#
 #   Copyright 2006
 #
 #   Matti Hamalainen

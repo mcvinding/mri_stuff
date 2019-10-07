@@ -4,8 +4,12 @@ Functions for multiecho BEM with GE scanner protocol.
 * Sort multiecho dicoms
 """
 import dicom
-from os import listdir, chdir, symlink, makedirs
+import os
 import os.path as op
+import subprocess
+
+mritools = op.abspath(__file__)
+
 
 def sort_MEdicom(in_path, out_path, replace=False):
     """
@@ -20,10 +24,10 @@ def sort_MEdicom(in_path, out_path, replace=False):
     replace:    [logical] Overwrite old files (default=False).
     """   
 
-    dcm_files = [f for f in listdir(in_path) if op.isfile(op.join(in_path,f))]
+    dcm_files = [f for f in os.listdir(in_path) if op.isfile(op.join(in_path,f))]
     print('Number of .dcm files = %s') % len(dcm_files)
 
-# 1) Find number of differen echos from .dcm files in folder
+    # 1) Find number of differen echos from .dcm files in folder
     print('Reading number of echos...')
     echo_dummy = [0]*len(dcm_files)
     for ii, dcm_fname in enumerate(dcm_files):
@@ -33,30 +37,58 @@ def sort_MEdicom(in_path, out_path, replace=False):
     echos = set(echo_dummy)    
     print('There are %d different echoes') % len(echos)
 
-# 2) Create folders for sorted .dcm    
+    # 2) Create folders for sorted .dcm    
     folders = ['']*len(echos)
     print('Creating folders in %s') % out_path
     for ii, ecco in enumerate(echos):
         folname = op.join(out_path,'flash06','00'+str(ecco))                       # The flash06 is to force compabability with mne_function later on (should probably be fixed!)
         folders[ii] = folname    
         if not op.exists(folname):
-            makedirs(folname)
+            os.makedirs(folname)
             print('Folder "%s" created for echo #%d') % (folname, ecco)
         else:
             print('Folder %s already exists!') %folname
         
-# 3) Sort .dcm in folders
+        # 3) Sort .dcm in folders
     for ii, dcm_fname in enumerate(dcm_files):
         echo = echo_dummy[ii]           #dicom.read_file(op.join(in_path,dcm_fname)).EchoNumbers
         print("Fname = %s is echo #%d") % (dcm_fname,  echo)
         where_to_put = [i for i, s in enumerate(folders) if '00'+str(echo) in s][0]
         fname_out = op.join(out_path,folders[where_to_put],dcm_fname)
         if not op.isfile(fname_out) or replace:
-            symlink(op.join(in_path,dcm_fname), fname_out)
+            os.symlink(op.join(in_path,dcm_fname), fname_out)
             print("File put in folder %s") % op.join(out_path,folders[where_to_put])
         else:
             print('Link to %s already exists!') %dcm_fname
                 
     print('DONE')
+    
+        
+def copyBEM2folder(subj, subjects_dir, target=['inner_skull','outer_skull','outer_skin']):
+    inpath = op.join(subjects_dir,subj,'bem','flash')
+    outpath = op.join(subjects_dir,subj,'bem')
+    [os.symlink(op.join(inpath,t+'.surf'), op.join(outpath,t+'.surf')) for t in target if op.exists(op.join(inpath,t+'.surf'))]
+    
+    
+def run_MEBEM(subj, dicom_dir, subjects_dir):
+    tempdir = os.getcwd()
+    
+    # Prepare arguments
+    cmd = (op.join(mritools, 'multiecho_bem/mne_flash_bem_NatMEG'))         #Command to execute
+    os.environ["SUBJECT"] = str(subj)
+    os.environ["SUBJECTS_DIR"] = str(subjects_dir)
+    
+    # Go to dir
+    os.chdir(op.join(dicom_dir))
+    
+    # Call script
+    val = subprocess.call(cmd, shell=True)
+    print(val)
+    os.chdir(tempdir)
+    print('done: %s' % subj)
+    
+    
+    
+            
         
 #END
