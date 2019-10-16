@@ -168,4 +168,3 @@ ft_plot_mesh(mesh_brain)
 cfg = [];
 cfg.method = 'singleshell';
 headmodel = ft_prepare_headmodel(cfg, mesh_brain);
-
