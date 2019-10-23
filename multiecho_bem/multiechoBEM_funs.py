@@ -8,7 +8,7 @@ import os
 import os.path as op
 import subprocess
 
-mritools = op.abspath(__file__)
+mritools = op.dirname(op.abspath(__file__))
 
 
 def sort_MEdicom(in_path, out_path, replace=False):
@@ -74,16 +74,23 @@ def run_MEBEM(subj, dicom_dir, subjects_dir):
     tempdir = os.getcwd()
     
     # Prepare arguments
-    cmd = (op.join(mritools, 'multiecho_bem/mne_flash_bem_NatMEG'))         #Command to execute
+    cmd = (op.join(mritools, 'mne_flash_bem_NatMEG'))         #Command to execute
+#    print(cmd)
     os.environ["SUBJECT"] = str(subj)
+#    print(os.environ["SUBJECT"])
     os.environ["SUBJECTS_DIR"] = str(subjects_dir)
+#    print(os.environ["SUBJECTS_DIR"])
     
     # Go to dir
     os.chdir(op.join(dicom_dir))
     
     # Call script
+    print('Running '+cmd)
+    print('SUBJECT: '+os.environ["SUBJECT"])
+    print('SUBJECTS_DIR: '+os.environ["SUBJECTS_DIR"])
+    print('>> Go to terminal to see status <<')
     val = subprocess.call(cmd, shell=True)
-    print(val)
+#    print(val)
     os.chdir(tempdir)
     print('done: %s' % subj)
     
