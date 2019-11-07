@@ -1,73 +1,48 @@
-% Warp template MRI to subject MRI and do source reconstruction.
-% addpath '~/fieldtrip/fieldtrip/'
-% addpath '~/fieldtrip/fieldtrip/external/mne'
-ftpath = 'C:\fieldtrip';
+%% Warp template MRI to subject MRI for creating source model
+
+% ftpath = 'C:\fieldtrip';
+ftpath = '/home/mikkel/fieldtrip/fieldtrip';
 addpath(ftpath)
 addpath(fullfile(ftpath,'external/spm12'))
 ft_defaults
 
-mri_path = 'Z:\PD_motor\MRI';
-mri_path = 'home/mikkel/PD_motor/MRI';
+%% Win paths
+raw_folder = 'Y:/workshop_source_reconstruction/20180206';
+out_folder = 'Z:/mri_scripts/warpig/data';
 
+%% Compute paths
+raw_folder = '/home/share/workshop_source_reconstruction/20180206';
+out_folder = '/home/mikkel/mri_scripts/warpig/data/';
 
-%% Options
-sub = '0362';  %Change if loop
+%% Subject
+subj = {'0177'};
 
-sub_path = fullfile(mri_path,sub);
+%% Paths
+mri_path = fullfile(raw_folder, 'MRI','dicoms');
+sub_path = fullfile(out_folder, subj{1});
 
 %% Load template MRI
 load standard_mri  % Load Colin 27
 mri_colin = mri;
 
-%% Step 1: Convert Load subject MRI (Option 1: from Freesurfer)
-% % NB: not working on WIN PC
-% 
-% % Read MRI
-% orig_fpath = fullfile(fs_path,sub,'mri/orig.mgz');
-% mri_orig = ft_read_mri(orig_fpath);
-% 
-% % Define coordinates
-% mri_coord = ft_determine_coordsys(mri_orig, 'interactive', 'yes');         % RAS, not a landmark
-% 
-% % Convert to acpc format [why the two step procedure?]
-% cfg = [];
-% cfg.method = 'interactive';
-% cfg.coordsys = 'neuromag';
-% mri_realigned = ft_volumerealign(cfg, mri_coord);
-% 
-% mri_acpc = ft_convert_coordsys(mri_realigned, 'acpc');
-% 
-% % Save subject volume as the "template". The template anatomy should always
-% % be stored in a SPM-compatible file
-% cfg = [];
-% cfg.filetype    = 'nifti';          % .nii exntension
-% cfg.parameter   = 'anatomy';
-% cfg.filename    = fullfile(mri_path,sub,'mri/orig');   % Same base filename but different format
-% ft_volumewrite(cfg, mri_acpc)
-
-% save(fullfile(fs_path,sub,'mri/template_morphed.mgz'));
-
-%% Step 1: Load subject MRI (Option 2: from FieldTrip)
-
+%% Step 1: Load subject MRI
 % Read MRI
-orig_fpath = fullfile(sub_path,'mri.mat');
-load(orig_fpath)
+raw_fpath = fullfile(mri_path, '00000001.dcm');
+mri_raw = ft_read_mri(raw_fpath);
 
 % Define coordinates
-mri_coord = ft_determine_coordsys(mri, 'interactive', 'yes');
+mri_coord = ft_determine_coordsys(mri_raw, 'interactive', 'yes');
 
 % Convert to acpc format [why the two step procedure: because finding ac and pc point is difficult]
 cfg = [];
 cfg.method = 'interactive';
-cfg.coordsys = 'spm';   % Changeing to 'spm' stil converts to 'acpc'
-mri_realigned = ft_volumerealign(cfg, mri_coord);       
-
-mri_acpc = ft_convert_coordsys(mri_realigned, 'acpc');     
+cfg.coordsys = 'acpc';   % Changeing to 'spm' stil converts to 'acpc'
+mri_acpc = ft_volumerealign(cfg, mri_coord);       
 
 % Not that if it gives warnings about left/right it might lead to erross
 
 % Save subject volume as the "template". The template anatomy should always
-% be stored in a SPM-compatible file
+% be stored in a SPM-compatible file (i.e. NIFTI)
 cfg = [];
 cfg.filetype    = 'nifti';          % .nii exntension
 cfg.parameter   = 'anatomy';
@@ -76,13 +51,8 @@ ft_volumewrite(cfg, mri_acpc)
 
 %% Make a resliced version for plotting (and for later processing)
 mri_acpc_resliced = ft_volumereslice([], mri_acpc);
-mri_spm_resliced = ft_volumereslice([], mri_spm);
 
-%% Make a resliced original MRI in neuromag coordsys for later processing
-mri_spm_resliced = ft_volumereslice([], mri_spm);
-
-
-%% plot 
+%% plot (for inspection)
 cfg = [];
 cfg.parameter = 'anatomy';
 ft_sourceplot(cfg, mri_acpc_resliced); title('MRI acpc')
@@ -92,20 +62,20 @@ ft_sourceplot(cfg, mri_acpc_resliced); title('MRI acpc')
 % Non-linear normalization (SPM8)
 cfg = [];
 cfg.nonlinear = 'yes';
-cfg.template = fullfile(sub_path,'orig2.nii');
+cfg.template = fullfile(sub_path,'orig_acpc.nii');
 mri_norm1 = ft_volumenormalise(cfg, mri_colin);
 
 % Linear normalization for comparison (SPM8)
 cfg = [];
 cfg.nonlinear = 'no';
-cfg.template = fullfile(sub_path,'orig2.nii');
+cfg.template = fullfile(sub_path,'orig_acpc.nii');
 cfg.templatecoordsys = 'acpc';
 mri_normL = ft_volumenormalise(cfg, mri_colin);
 
 % Non-lineear normalization (SPM12)
 cfg = [];
 cfg.nonlinear = 'yes';
-cfg.template = fullfile(sub_path,'orig2.nii');
+cfg.template = fullfile(sub_path,'orig_acpc.nii');
 cfg.spmversion = 'spm12';
 mri_norm2 = ft_volumenormalise(cfg, mri_colin);
 
@@ -113,7 +83,7 @@ mri_norm2 = ft_volumenormalise(cfg, mri_colin);
 % Gave Warning: conversion from spm to acpc is not supported [?]
 cfg = [];
 cfg.nonlinear = 'yes';
-cfg.template = fullfile(sub_path,'orig2.nii');
+cfg.template = fullfile(sub_path,'orig_acpc.nii');
 cfg.spmmethod = 'new';
 cfg.spmversion = 'spm12';
 mri_norm3 = ft_volumenormalise(cfg, mri_colin);
@@ -121,17 +91,17 @@ mri_norm3 = ft_volumenormalise(cfg, mri_colin);
 % Linear normalization for comparison (SPM12) - same as SPM8
 cfg = [];
 cfg.nonlinear = 'no';
-cfg.template = fullfile(sub_path,'orig2.nii');
+cfg.template = fullfile(sub_path,'orig_acpc.nii');
 cfg.spmversion = 'spm12';
 mri_normL2 = ft_volumenormalise(cfg, mri_colin);
 
 %% Experimental: fist linear, then nonlinear
-cfg = [];
-cfg.nonlinear = 'yes';
-cfg.template = fullfile(sub_path,'orig2.nii');
-cfg.spmmethod = 'new';
-cfg.spmversion = 'spm12';
-mri_normX = ft_volumenormalise(cfg, mri_normL);
+% cfg = [];
+% cfg.nonlinear = 'yes';
+% cfg.template = fullfile(sub_path,'orig2.nii');
+% cfg.spmmethod = 'new';
+% cfg.spmversion = 'spm12';
+% mri_normX = ft_volumenormalise(cfg, mri_normL);
 
 %% Determine coordsys
 mri_norm1 = ft_determine_units(mri_norm1);

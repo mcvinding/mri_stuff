@@ -50,7 +50,7 @@ mri3_realigned_3 = ft_volumerealign(cfg, mri3_realigned_2);
 mriL_realigned_3 = ft_volumerealign(cfg, mriL_realigned_2);
 mri0_realigned_3 = ft_volumerealign(cfg, mri0_realigned_2);
 
-%% Reslice
+%% Reslice (takes a very long time)
 cfg = [];
 cfg.resolution = 1;
 mri1_resliced = ft_volumereslice(cfg, mri1_realigned_2);
