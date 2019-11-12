@@ -1,4 +1,4 @@
-% Add template to subject with missing MRI
+% Add template to subject with missing MRI. Scale based on headpoints.
 clear all;
 close all;
 restoredefaultpath
