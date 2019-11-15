@@ -110,15 +110,15 @@ fprintf('done\n')
 %% Preapre for Freesurfer (nor used)
 % I have still not tested how the normalized MRI run in Freesurfer.
 
-cfg = [];
-cfg.output = 'brain';
-seg = ft_volumesegment(cfg, mri_norm);
-mri.anatomy = mri.anatomy.*double(seg.brain);
-
-cfg             = [];
-cfg.filename    = 'workshop_material/data/mri/freesurfer/Sub02/sub02mask';
-cfg.filetype    = 'mgz';
-cfg.parameter   = 'anatomy';
-ft_volumewrite(cfg, mri);
+% cfg = [];
+% cfg.output = 'brain';
+% seg = ft_volumesegment(cfg, mri_norm);
+% mri.anatomy = mri.anatomy.*double(seg.brain);
+% 
+% cfg             = [];
+% cfg.filename    = 'workshop_material/data/mri/freesurfer/Sub02/sub02mask';
+% cfg.filetype    = 'mgz';
+% cfg.parameter   = 'anatomy';
+% ft_volumewrite(cfg, mri);
 
 % END
