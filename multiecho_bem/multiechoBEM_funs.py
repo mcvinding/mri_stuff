@@ -6,6 +6,7 @@ Functions for multiecho BEM with GE scanner protocol.
 import dicom
 import os
 import os.path as op
+import shutil
 import subprocess
 
 mritools = op.dirname(op.abspath(__file__))
@@ -41,7 +42,7 @@ def sort_MEdicom(in_path, out_path, replace=False):
     folders = ['']*len(echos)
     print('Creating folders in %s') % out_path
     for ii, ecco in enumerate(echos):
-        folname = op.join(out_path,'flash06','00'+str(ecco))                       # The flash06 is to force compabability with mne_function later on (should probably be fixed!)
+        folname = op.join(out_path,'flash06','00'+str(ecco)) # The flash06 is to force compabability with mne_function later on (should probably be fixed!)
         folders[ii] = folname    
         if not op.exists(folname):
             os.makedirs(folname)
@@ -64,11 +65,12 @@ def sort_MEdicom(in_path, out_path, replace=False):
     print('DONE')
     
         
-def copyBEM2folder(subj, subjects_dir, target=['inner_skull','outer_skull','outer_skin']):
+def copyBEM2folder(subj, subjects_dir, target=['inner_skull','outer_skull','outer_skin'], replace=True):
     inpath = op.join(subjects_dir,subj,'bem','flash')
     outpath = op.join(subjects_dir,subj,'bem')
-    [os.symlink(op.join(inpath,t+'.surf'), op.join(outpath,t+'.surf')) for t in target if op.exists(op.join(inpath,t+'.surf'))]
-    
+#    [os.symlink(op.join(inpath,t+'.surf'), op.join(outpath,t+'.surf')) for t in target if op.exists(op.join(inpath,t+'.surf'))]
+    [shutil.copy(op.join(inpath,t+'.surf'), op.join(outpath,t+'.surf')) for t in target if op.exists(op.join(inpath,t+'.surf')) and not (op.isfile(op.join(outpath,t+'.surf')) and not replace)]
+
     
 def run_MEBEM(subj, dicom_dir, subjects_dir):
     tempdir = os.getcwd()
