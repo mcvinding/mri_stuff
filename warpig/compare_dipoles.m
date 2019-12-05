@@ -33,6 +33,14 @@ norm(dip_grad_late_orig.dip.pos(1,:)-dip_grad_late_spm12.dip.pos(1,:))
 norm(dip_grad_late_spm12.dip.pos(1,:)-dip_grad_late_lin.dip.pos(2,:))
 
 
-
-
 %END
+
+%%
+dip_mag_early_orig
+dip_mag_early_orig.Vdiff = dip_mag_early_orig.Vdata-dip_mag_early_orig.Vmodel;
+
+cfg = [];
+cfg.layout = 'neuromag306mag.lay';
+cfg.parameter = 'Vdiff';
+ft_multiplotER(cfg, rmfield(dip_mag_early_orig, 'dip'))
+

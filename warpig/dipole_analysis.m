@@ -22,15 +22,21 @@ disp('Done');
 
 data = timelockeds{4};   % Only indexfinger stim.
 
+%% Plot topographies
+cfg = [];
+cfg.layout = 'neuromag306mag';
+figure; ft_multiplotER(cfg, data);
+
+
 %% Settings
-early_latency   = [0.040 0.060]; % s
+early_latency   = [0.000 0.060]; % s
 late_latency    = [0.115 0.155]; % s
 
 cfg = [];
 cfg.channel = 'MEG*';
 meg_data = ft_selectdata(cfg, data);
-grad = meg_data.grad;                   % Something wierd! Somwhow all channels are megmag ???
-grad = ft_convert_units(grad, 'mm');  %Remember to convert units or errors
+meg_data.grad = ft_convert_units(grad, 'mm');
+
 
 %% Make leadfields
 % cfg = [];
@@ -59,7 +65,7 @@ cfg.dipfit.metric       = 'rv';         %% the metric to minimize (the relative 
 cfg.model               = 'regional';   %% we assume that the dipole has a fixed position during the time points in the latency range
 cfg.senstype            = 'MEG';        %% sensor type
 cfg.channel             = 'megmag';     %% which channels to use
-cfg.grad                = grad;
+% cfg.grad                = grad;
 cfg.nonlinear           = 'yes';        %% do a non-linear search
 
 % FIRST COMPONENT

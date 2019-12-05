@@ -6,13 +6,15 @@ addpath(ftpath)
 addpath(fullfile(ftpath,'external/spm12'))
 ft_defaults
 
-%% Win paths
-raw_folder = 'Y:/workshop_source_reconstruction/20180206';
-out_folder = 'Z:/mri_scripts/warpig/data';
-
-%% Compute paths
-raw_folder = '/home/share/workshop_source_reconstruction/20180206';
-out_folder = '/home/mikkel/mri_scripts/warpig/data/';
+%% Paths
+% Run on local Windows for better plotting
+if ispc
+    raw_folder = 'Y:/workshop_source_reconstruction/20180206';
+    out_folder = 'Z:/mri_scripts/warpig/data';
+else
+    raw_folder = '/home/share/workshop_source_reconstruction/20180206';
+    out_folder = '/home/mikkel/mri_scripts/warpig/data/';
+end
 
 %% Subject
 subj = {'0177'};
