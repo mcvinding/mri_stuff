@@ -64,14 +64,22 @@ def sort_MEdicom(in_path, out_path, replace=False):
             print('Link to',dcm_fname, 'already exists!')
                 
     print('DONE')
-    
-        
-def copyBEM2folder(subj, subjects_dir, target=['inner_skull','outer_skull','outer_skin'], replace=False):
-    inpath = op.join(subjects_dir,subj,'bem','flash')
-    outpath = op.join(subjects_dir,subj,'bem')
-#    [os.symlink(op.join(inpath,t+'.surf'), op.join(outpath,t+'.surf')) for t in target if op.exists(op.join(inpath,t+'.surf'))]
-    [shutil.copy(op.join(inpath,t+'.surf'), op.join(outpath,t+'.surf')) for t in target if op.exists(op.join(inpath,t+'.surf')) and not (op.isfile(op.join(outpath,t+'.surf')) and not replace)]
 
+        
+def copyBEM2folder(subj, subjects_dir, target=['inner_skull','outer_skull','outer_skin'], replace=False, hardcopy=True):
+    if hardcopy:
+        inpath = op.join(subjects_dir, subj,'bem','flash')
+        outpath = op.join(subjects_dir,subj,'bem')
+        
+        [shutil.copy(op.join(inpath,t+'.surf'), op.join(outpath,t+'.surf')) for t in target if op.exists(op.join(inpath,t+'.surf')) and not (op.isfile(op.join(outpath,t+'.surf')) and not replace)]
+        
+    else:
+        os.chdir(subjects_dir)
+        inpath = op.join(subj,'bem','flash')
+        outpath = op.join(subj,'bem')
+        
+        [os.symlink(op.join(inpath,t+'.surf'), op.join(outpath,t+'.surf')) for t in target if op.exists(op.join(inpath,t+'.surf'))]
+    
     
 def run_MEBEM(subj, dicom_dir, subjects_dir):
     tempdir = os.getcwd()
@@ -96,5 +104,19 @@ def run_MEBEM(subj, dicom_dir, subjects_dir):
 #    print(val)
     os.chdir(tempdir)
     print('done: '+subj)      
+    
+    
+def add_highres_headmod(subj, subjects_dir, overwrite=False):
+    os.environ["SUBJECTS_DIR"] = str(subjects_dir)
+    
+    if overwrite:
+        owstr = ' --overwrite'
+    else:
+        owstr = str()
+    
+    # Add high reas scalp surface
+    cmd = 'mne make_scalp_surfaces -s '+subj+' -d '+subjects_dir+' --force'+owstr        #Command to execute
+    val = subprocess.call(cmd, shell=True)
+
         
 #END
