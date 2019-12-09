@@ -109,12 +109,29 @@ save(fullfile(sub_path,'mri_norm_spm12'),'mri_norm_spm12')
 save(fullfile(sub_path,'mri_norm_lin'), 'mri_norm_lin')
 fprintf('done\n')
 
-%% Preapre for Freesurfer (nor used)
-% I have still not tested how the normalized MRI run in Freesurfer.
+%% Preapre for Freesurfer
+cfg = [];
+cfg.filename = '/home/mikkel/mri_scripts/warpig/fs_subjects_dir/0177_lin/mri/orig/001';
+cfg.filetype = 'mgz';
+cfg.parameter = 'anatomy';
+ft_volumewrite(cfg, mri_norm_lin);
+
+cfg = [];
+cfg.filename = '/home/mikkel/mri_scripts/warpig/fs_subjects_dir/0177_spm8/mri/orig/001';
+cfg.filetype = 'mgz';
+cfg.parameter = 'anatomy';
+ft_volumewrite(cfg, mri_norm_spm8);
+
+cfg = [];
+cfg.filename = '/home/mikkel/mri_scripts/warpig/fs_subjects_dir/0177_spm12/mri/orig/001';
+cfg.filetype = 'mgz';
+cfg.parameter = 'anatomy';
+ft_volumewrite(cfg, mri_norm_spm12);
+
 
 % cfg = [];
 % cfg.output = 'brain';
-% seg = ft_volumesegment(cfg, mri_norm);
+% seg = ft_volumesegment(cfg, mri_norm_lin);
 % mri.anatomy = mri.anatomy.*double(seg.brain);
 % 
 % cfg             = [];
@@ -122,5 +139,27 @@ fprintf('done\n')
 % cfg.filetype    = 'mgz';
 % cfg.parameter   = 'anatomy';
 % ft_volumewrite(cfg, mri);
+% 
+% cfg = [];
+% cfg.output = 'brain';
+% seg = ft_volumesegment(cfg, mri_norm_lin);
+% mri.anatomy = mri.anatomy.*double(seg.brain);
+% 
+% cfg             = [];
+% cfg.filename    = 'workshop_material/data/mri/freesurfer/Sub02/sub02mask';
+% cfg.filetype    = 'mgz';
+% cfg.parameter   = 'anatomy';
+% ft_volumewrite(cfg, mri);
+% 
+% cfg = [];
+% cfg.output = 'brain';
+% seg = ft_volumesegment(cfg, mri_norm_lin);
+% mri.anatomy = mri.anatomy.*double(seg.brain);
+% 
+% cfg             = [];
+% cfg.filename    = 'workshop_material/data/mri/freesurfer/Sub02/sub02mask';
+% cfg.filetype    = 'mgz';
+% cfg.parameter   = 'anatomy';
+ft_volumewrite(cfg, mri);
 
 % END
