@@ -13,9 +13,9 @@ load(fullfile(raw_folder,'timelockeds.mat'));
 load(fullfile(data_path, 'headmodel_lin.mat'));
 load(fullfile(data_path, 'headmodel_orig.mat'));
 load(fullfile(data_path, 'headmodel_spm12.mat'));
-load(fullfile(data_path, 'sourcemodel_lin.mat'));
-load(fullfile(data_path, 'sourcemodel_orig.mat'));
-load(fullfile(data_path, 'sourcemodel_spm12.mat'));
+% load(fullfile(data_path, 'sourcemodel_lin.mat'));
+% load(fullfile(data_path, 'sourcemodel_orig.mat'));
+% load(fullfile(data_path, 'sourcemodel_spm12.mat'));
 load(fullfile(data_path, 'grad'));    % !!!
 
 disp('Done');
