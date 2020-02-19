@@ -33,11 +33,11 @@ mri_raw = ft_read_mri(raw_fpath);
 % Define coordinates
 mri_coord = ft_determine_coordsys(mri_raw, 'interactive', 'yes');
 
-% Convert to acpc format [why the two step procedure: because finding ac and pc point is difficult]
+% Convert to acpc format
 cfg = [];
 cfg.method = 'interactive';
 cfg.coordsys = 'acpc';   % Changeing to 'spm' stil converts to 'acpc'
-mri_acpc = ft_volumerealign(cfg, mri_coord);       
+mri_acpc = ft_volumerealign(cfg, mri_coord);
 
 % Not that if it gives warnings about left/right it might lead to erross
 
@@ -82,10 +82,11 @@ mri_norm2 = ft_volumenormalise(cfg, mri_colin);
 % Non-linear normalization "new" method (SPM12)
 % Gave Warning: conversion from spm to acpc is not supported [?]
 cfg = [];
-cfg.nonlinear = 'yes';
-cfg.template = fullfile(sub_path,'orig_acpc.nii');
-cfg.spmmethod = 'new';
-cfg.spmversion = 'spm12';
+cfg.nonlinear   = 'yes';
+cfg.template    = fullfile(sub_path,'orig_acpc.nii');
+cfg.spmmethod   = 'new';
+cfg.spmversion  = 'spm12';
+cfg.templatecoordsys = 'acpc';  % Does not matter as ft_convert_coordsys will fix this
 mri_norm3 = ft_volumenormalise(cfg, mri_colin);
 
 % Linear normalization for comparison (SPM12) - same as SPM8

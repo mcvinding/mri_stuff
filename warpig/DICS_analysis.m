@@ -102,7 +102,7 @@ cfg.dics.projectnoise   = 'yes';                    % estimate noise
 cfg.dics.lambda         = '5%';                    % how to regularise
 cfg.dics.keepfilter     = 'yes';                    % keep the spatial filter in the output
 cfg.dics.realfilter     = 'yes';                    % retain the real values
-cfg.channel             = 'meg';
+cfg.channel             = 'meg'; % Try change to grad and mag
 cfg.senstype            = 'meg';
 cfg.grad                = pow_combined.grad;
 
