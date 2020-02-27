@@ -67,6 +67,10 @@ def sort_MEdicom(in_path, out_path, replace=False):
 
         
 def copyBEM2folder(subj, subjects_dir, target=['inner_skull','outer_skull','outer_skin'], replace=False, hardcopy=True):
+    
+    if op.exists(op.join(subjects_dir, subj, 'bem', 'inner_skull.surf')) and not replace:
+        raise Exception("Files appear to already exist. Will not copy")
+    
     if hardcopy:
         inpath = op.join(subjects_dir, subj,'bem','flash')
         outpath = op.join(subjects_dir,subj,'bem')
@@ -83,6 +87,9 @@ def copyBEM2folder(subj, subjects_dir, target=['inner_skull','outer_skull','oute
     
 def run_MEBEM(subj, dicom_dir, subjects_dir):
     tempdir = os.getcwd()
+    
+    if op.exists(op.join(subjects_dir, subj, 'bem', 'falsh', 'inner_skull.surf')):
+        raise Exception("Files appear to already exist. Delete to run again")
     
     # Prepare arguments
     cmd = (op.join(mritools, 'mne_flash_bem_NatMEG'))         #Command to execute

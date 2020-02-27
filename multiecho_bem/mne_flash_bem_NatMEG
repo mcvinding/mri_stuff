@@ -11,7 +11,7 @@
 #    4. cd to the directory where flash05 (edit: flash06) is
 #    5. Run this script without any arguments
 #
-#   Revised script for running "flash" image BEM from multiecho sequences from GE scanner at KI. I do not guarantee that it will work for any other type of sequency. Edited by @mcvinding. Original copyright below.
+#   Revised script for running "flash" image BEM from multiecho sequences from GE scanner at KI. I do not guarantee that it will work for any other type of sequence. Edited by @mcvinding. Original copyright below.
 #
 #   Copyright 2006
 #
