@@ -16,4 +16,11 @@ The Python script *make_MEBEM_template.py* is a wrapper for running a pipeline t
 * **multiechoBEM_funs**: Various python functions for sorting files and calling Bash scripts.
 * **mne_flash_bem_NatMEG**: A version of *mne_flash_bem* from *mne* ((c) 2006 Matti Hamalainen ). This version is modified to run on multiecho sequence from GE scanner at KI.
 
+<<<<<<< HEAD
 For questions, please contact mikkel.vinding@ki.se
+=======
+## Dependencies
+* pydicom (https://anaconda.org/conda-forge/pydicom)
+
+For questions, please contact mailto:mikkel.vinding@ki.se
+>>>>>>> master
