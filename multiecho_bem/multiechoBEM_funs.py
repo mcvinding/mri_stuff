@@ -58,6 +58,12 @@ def sort_MEdicom(in_path, out_path, replace=False):
         where_to_put = [i for i, s in enumerate(folders) if '00'+str(echo) in s][0]
         fname_out = op.join(out_path,folders[where_to_put],dcm_fname)
         if not op.isfile(fname_out) or replace:
+            if replace:
+                try:
+                    os.remove(fname_out)
+                except:
+                    pass
+                
             os.symlink(op.join(in_path,dcm_fname), fname_out)
             print("File put in folder ",op.join(out_path,folders[where_to_put]))
         else:
