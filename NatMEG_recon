@@ -17,11 +17,11 @@ fi
 megId=$1
 t1_nr=$2
 if [ $4 ]; then
-	subId="$4"
+	export SUBJECT="$4"
 else
-	subId="$1"
+	export SUBJECT="$1"
 fi
-echo "MEG id = $megId, MR seq. = $t1_nr, fs output id = $subId"
+echo "MEG id = $megId, MR seq. = $t1_nr, fs output id = $SUBJECT"
 
 # Define output dir
 if [[ ! -z "$3" ]]; then
@@ -53,7 +53,7 @@ MRI_archive='/archive/50001_MR_archive'
 MRI_subDir=$(find $MRI_archive -maxdepth 1 -type d -name "*$megId*" | awk 'NR==1')
 #echo $MRI_subDir
 if [ ! -d "$MRI_subDir" ]; then
-	echo "Could not find subject "$subId" in $MRI_archive"
+	echo "Could not find subject "$SUBJECT" in $MRI_archive"
 	exit 1
 fi
 
@@ -76,16 +76,16 @@ fi
 
 # Run Freesurfer 
 echo '------------------------------------------------------------'
-echo "---------- Now running recon-all on $subId -----------------"
+echo "---------- Now running recon-all on $SUBJECT -----------------"
 echo '------------------------------------------------------------'
 
 ###### Run Freesurfer ######
-recon-all -subjid $subId -i $fname -all
+recon-all -subjid $SUBJECT -i $fname -all
 
 echo '------------------------------------------------------------'
-echo "------------------- DONE $subId ----------------------------"
+echo "------------------- DONE $SUBJECT --------------------------"
 echo '------------------------------------------------------------'
 
-cd $SUBJECTS_DIR/$subId/mri
+cd $SUBJECTS_DIR/$SUBJECT/mri
 
 #END
