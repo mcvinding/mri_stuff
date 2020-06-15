@@ -3,7 +3,7 @@
 % ftpath = 'C:\fieldtrip';
 ftpath = '/home/mikkel/fieldtrip/fieldtrip';
 addpath(ftpath)
-addpath(fullfile(ftpath,'external/spm12'))
+% addpath(fullfile(ftpath,'external/spm12'))
 ft_defaults
 
 %% Paths
@@ -23,7 +23,7 @@ subj = {'0177'};
 mri_path = fullfile(raw_folder, 'MRI','dicoms');
 sub_path = fullfile(out_folder, subj{1});
 
-%% Load template MRI
+%% Load tem
 load standard_mri  % Load Colin 27
 mri_colin = mri;
 
@@ -38,10 +38,10 @@ save(fullfile(sub_path, 'mri_orig.mat'), 'mri_raw')
 % Define coordinates
 mri_coord = ft_determine_coordsys(mri_orig, 'interactive', 'yes');
 
-% Convert to acpc format [why the two step procedure: because finding ac and pc point is difficult]
+% Convert to acpc format
 cfg = [];
 cfg.method = 'interactive';
-cfg.coordsys = 'acpc';   % Changeing to 'spm' stil converts to 'acpc'
+cfg.coordsys = 'acpc';  
 mri_acpc = ft_volumerealign(cfg, mri_coord);       
 
 % Not that if it gives warnings about left/right it might lead to erross
@@ -54,6 +54,19 @@ cfg.parameter   = 'anatomy';
 cfg.filename    = fullfile(sub_path,'orig_acpc');   % Same base filename but different format
 ft_volumewrite(cfg, mri_acpc)
 
+
+%% Convert to ctf coordsys
+cfg = [];
+cfg.method = 'interactive';
+cfg.coordsys = 'ctf'; 
+mri_ctf = ft_volumerealign(cfg, mri_coord);     
+
+cfg = [];
+cfg.filetype    = 'nifti';          % .nii exntension
+cfg.parameter   = 'anatomy';
+cfg.filename    = fullfile(sub_path,'orig_ctf');   % Same base filename but different format
+ft_volumewrite(cfg, mri_ctf)
+
 %% Make a resliced version for plotting (and for later processing)
 mri_acpc_resliced = ft_volumereslice([], mri_acpc);
 
@@ -62,7 +75,45 @@ cfg = [];
 cfg.parameter = 'anatomy';
 ft_sourceplot(cfg, mri_acpc_resliced); title('MRI acpc')
 
+%% Neuromag coordsys (sandbox)
+cfg = [];
+cfg.method = 'interactive';
+cfg.coordsys = 'neuromag';
+mri_nromg = ft_volumerealign(cfg, mri_coord);       
+
+cfg = [];
+cfg.filetype    = 'nifti';          % .nii exntension
+cfg.parameter   = 'anatomy';
+cfg.filename    = fullfile(sub_path,'orig_neuromag');   % Same base filename but different format
+ft_volumewrite(cfg, mri_nromg)
+
 %% Normalize: template -> subject
+cfg = [];
+cfg.nonlinear   = 'yes';
+cfg.spmmethod   = 'new';
+% cfg.spmversion  = 'spm8';
+% cfg.template    = fullfile(sub_path,'orig_neuromag.nii');
+% cfg.template    = fullfile(sub_path,'orig_ctf.nii');
+% cfg.templatecoordsys = 'ctf';
+% cfg.template = mri_nromg;
+mri_warp_def = ft_volumenormalise(cfg, mri_colin);
+
+%% Plot
+ft_sourceplot([],mri_warp_ctf); title('Warped CTF')
+ft_sourceplot([],mri_warp_nmg); title('Warped Neuromag')
+ft_sourceplot([],mri_warp_def); title('Warped defaults')
+
+% Works for both acpc and neuromag nad now cft
+tst = ft_convert_coordsys(mri_warp_nmg, 'ctf')
+
+ft_sourceplot([],tst); title('Warped Neuromag')
+
+%%
+ft_sourceplot([],tst); 
+%%
+
+
+
 
 % A) Non-linear normalization (SPM8) (Gives Cronenberg image)
 cfg = [];
@@ -72,10 +123,10 @@ mri_norm_spm8 = ft_volumenormalise(cfg, mri_colin);
 
 % B) Non-linear normalization "new" method (SPM12)
 cfg = [];
-cfg.nonlinear = 'yes';
-cfg.template = fullfile(sub_path,'orig_acpc.nii');
-cfg.spmmethod = 'new';
-cfg.spmversion = 'spm12';
+cfg.nonlinear   = 'yes';
+cfg.template    = fullfile(sub_path,'orig_acpc.nii');
+cfg.spmmethod   = 'new';
+cfg.spmversion  = 'spm12';
 mri_norm_spm12 = ft_volumenormalise(cfg, mri_colin);
 
 % Linear normalization for comparison (SPM12 - same as SPM8)
