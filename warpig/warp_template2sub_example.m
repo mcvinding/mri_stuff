@@ -52,17 +52,47 @@ ft_volumewrite(cfg, mri_acpc)
 %% Make a resliced version for plotting (and for later processing)
 mri_acpc_resliced = ft_volumereslice([], mri_acpc);
 
-%% plot (for inspection)
 cfg = [];
-cfg.parameter = 'anatomy';
-ft_sourceplot(cfg, mri_acpc_resliced); title('MRI acpc')
+cfg.filetype    = 'nifti';          % .nii exntension
+cfg.parameter   = 'anatomy';
+cfg.filename    = fullfile(sub_path,'orig_acpc_rs');   % Same base filename but different format
+ft_volumewrite(cfg, mri_acpc_resliced)
+
+
+%% plot (for inspection)
+ft_sourceplot([], mri_acpc_resliced); title('MRI acpc')
 
 %% Normalize: template -> subject
+cfg = [];
+cfg.nonlinear   = 'yes';
+cfg.spmmethod   = 'old';
+% cfg.spmversion  = 'spm8';
+cfg.template    = fullfile(sub_path,'orig_acpc.nii');
+% cfg.template    = fullfile(sub_path,'orig_ctf.nii');
+cfg.templatecoordsys = 'acpc';
+% cfg.template = mri_nromg;
+mri_warp_acpc = ft_volumenormalise(cfg, mri_colin);
+mri_warp_acpc2 = ft_volumenormalise(cfg, mri_colin);
+
+
+%% Plot
+ft_sourceplot([],mri_warp_ctf); title('Warped CTF')
+ft_sourceplot([],mri_warp_nmg); title('Warped Neuromag')
+ft_sourceplot([],mri_warp_acpc); title('Warped acpc')
+ft_sourceplot([],mri_warp_acpc2); title('Warped acpc2')
+ft_sourceplot([],mri_warp_acpc2); title('Orig')
+
+
+
+
+
+
+
 
 % Non-linear normalization (SPM8)
 cfg = [];
 cfg.nonlinear = 'yes';
-cfg.template = fullfile(sub_path,'orig_acpc.nii');
+cfg.template = fullfile(sub_path,'orig_acpc_rs.nii');
 mri_norm1 = ft_volumenormalise(cfg, mri_colin);
 
 % Linear normalization for comparison (SPM8)

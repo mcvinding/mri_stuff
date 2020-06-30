@@ -4,7 +4,7 @@
 ftpath = '/home/mikkel/fieldtrip/fieldtrip';
 addpath(ftpath)
 % addpath(fullfile(ftpath,'external/spm12'))
-ft_defaults
+ft_defaults 
 
 %% Paths
 % Run on local Windows for better plotting
@@ -23,22 +23,32 @@ subj = {'0177'};
 mri_path = fullfile(raw_folder, 'MRI','dicoms');
 sub_path = fullfile(out_folder, subj{1});
 
-%% Load tem
-load standard_mri  % Load Colin 27
-mri_colin = mri;
-
 %% Step 1: Load subject MRI and save as "template"
+% Load the subject anatomical image. Determine coordinate systen (ras, origin not
+% a landmark). The nconvert to the desired coordinate system. In this
+% example we convert to three different commonly used coordinate systems in
+% MEG data analysis; acpc, neuromag, and cft, to test performance. Only one
+% of the templates will be used in the folowing MEG data analysis. For
+% information on the differenty coordinate systems see http://www.fieldtriptoolbox.org/faq/how_are_the_different_head_and_mri_coordinate_systems_defined/
+%
+% Only convert of acpc will give correct results at the moment (June 2020).
+% There seem to be an error in how SPM calculates the affine alignment for
+% coordinate systems not similar to SPM's coordinate system. For analysis I
+% will first convert the subject MRI to acpc coordinate system, do the
+% template warp, and then convert the warped templte to neuromag for MEG 
+% analysis.
+
 % Read MRI
 raw_fpath = fullfile(mri_path, '00000001.dcm');
 mri_orig = ft_read_mri(raw_fpath);
 
-%Save for later
+%Save (optional)
 save(fullfile(sub_path, 'mri_orig.mat'), 'mri_raw')
 
-% Define coordinates
+% Define coordinates of raw (r-a-s-n)
 mri_coord = ft_determine_coordsys(mri_orig, 'interactive', 'yes');
 
-% Convert to acpc format
+%% Convert to acpc format
 cfg = [];
 cfg.method = 'interactive';
 cfg.coordsys = 'acpc';  
@@ -47,13 +57,51 @@ mri_acpc = ft_volumerealign(cfg, mri_coord);
 % Not that if it gives warnings about left/right it might lead to erross
 
 % Save subject volume as the "template". The template anatomy should always
-% be stored in a SPM-compatible file (i.e. NIFTI)
+% be stored in a SPM-compatible file (i.e. NIFTI).
+% ONLY THE RESLICED SHOULD (PROBABLY) BE SAVED IN THIS STEP
 cfg = [];
 cfg.filetype    = 'nifti';          % .nii exntension
 cfg.parameter   = 'anatomy';
 cfg.filename    = fullfile(sub_path,'orig_acpc');   % Same base filename but different format
 ft_volumewrite(cfg, mri_acpc)
 
+% Reslice to new coordinate system
+mri_acpc_resliced = ft_volumereslice([], mri_acpc);
+
+% Save subject volume as the "template". The template anatomy should always
+% be stored in a SPM-compatible file (i.e. NIFTI).
+cfg = [];
+cfg.filetype    = 'nifti';          % .nii exntension
+cfg.parameter   = 'anatomy';
+cfg.filename    = fullfile(sub_path,'orig_acpc_rs');   % Same base filename but different format
+ft_volumewrite(cfg, mri_acpc_resliced)
+
+%% Convert to Neuromag format
+cfg = [];
+cfg.method = 'interactive';
+cfg.coordsys = 'neuromag';  
+mri_neuromag = ft_volumerealign(cfg, mri_coord);       
+
+% Not that if it gives warnings about left/right it might lead to erross
+
+% Save subject volume as the "template". The template anatomy should always
+% be stored in a SPM-compatible file (i.e. NIFTI)
+% cfg = [];
+% cfg.filetype    = 'nifti';          % .nii exntension
+% cfg.parameter   = 'anatomy';
+% cfg.filename    = fullfile(sub_path,'orig_neuromag');   % Same base filename but different format
+% ft_volumewrite(cfg, mri_neuromag)
+
+% Reslice to new coordinate system
+mri_neuromag_resliced = ft_volumereslice([], mri_neuromag);
+
+% Save subject volume as the "template". The template anatomy should always
+% be stored in a SPM-compatible file (i.e. NIFTI).
+cfg = [];
+cfg.filetype    = 'nifti';          % .nii exntension
+cfg.parameter   = 'anatomy';
+cfg.filename    = fullfile(sub_path,'orig_neuromag_rs');   % Same base filename but different format
+ft_volumewrite(cfg, mri_neuromag_resliced)
 
 %% Convert to ctf coordsys
 cfg = [];
@@ -67,54 +115,101 @@ cfg.parameter   = 'anatomy';
 cfg.filename    = fullfile(sub_path,'orig_ctf');   % Same base filename but different format
 ft_volumewrite(cfg, mri_ctf)
 
-%% Make a resliced version for plotting (and for later processing)
-mri_acpc_resliced = ft_volumereslice([], mri_acpc);
+% Reslice to new coordinate system
+mri_ctf_resliced = ft_volumereslice([], mri_ctf);
 
-%% plot (for inspection)
-cfg = [];
-cfg.parameter = 'anatomy';
-ft_sourceplot(cfg, mri_acpc_resliced); title('MRI acpc')
-
-%% Neuromag coordsys (sandbox)
-cfg = [];
-cfg.method = 'interactive';
-cfg.coordsys = 'neuromag';
-mri_nromg = ft_volumerealign(cfg, mri_coord);       
-
+% Save subject volume as the "template". The template anatomy should always
+% be stored in a SPM-compatible file (i.e. NIFTI).
 cfg = [];
 cfg.filetype    = 'nifti';          % .nii exntension
 cfg.parameter   = 'anatomy';
-cfg.filename    = fullfile(sub_path,'orig_neuromag');   % Same base filename but different format
-ft_volumewrite(cfg, mri_nromg)
+cfg.filename    = fullfile(sub_path,'orig_ctf_rs');   % Same base filename but different format
+ft_volumewrite(cfg, mri_ctf_resliced)
 
-%% Normalize: template -> subject
+%% plot (for inspection)
+ft_sourceplot([], mri_acpc_resliced); title('orig MRI acpc')
+ft_sourceplot([], mri_neuromag_resliced); title('orig MRI neuromag')
+ft_sourceplot([], mri_ctf_resliced); title('orig MRI ctf')
+
+%% Step 2: warp a template MRI to the individual "templates"
+% In this example we load the Colin27 template (https://www.mcgill.ca/bic/software/tools-data-analysis/anatomical-mri/atlases/colin-27),
+% which comes as the standard_mri in FieldTrip. Then use
+% ft_volumenormalise to "normalise" the Colin27 template to the indivdual 
+% anatomical "templates" created above.
+%
+% Only convert of acpc will give correct results at the moment (June 2020).
+% There seem to be an error in how SPM calculates the affine alignment for
+% coordinate systems not similar to SPM's coordinate system. For analysis I
+% will first convert the subject MRI to acpc coordinate system, do the
+% template warp, and then convert the warped templte to neuromag for MEG 
+% analysis.
+
+% Load template MRI
+load standard_mri  % Load Colin 27
+mri_colin = mri;   % Rename to avoid confusion
+
+%% Normalise template -> subject (acpc subject template)
 cfg = [];
-cfg.nonlinear   = 'yes';
-cfg.spmmethod   = 'new';
-% cfg.spmversion  = 'spm8';
-% cfg.template    = fullfile(sub_path,'orig_neuromag.nii');
-% cfg.template    = fullfile(sub_path,'orig_ctf.nii');
-% cfg.templatecoordsys = 'ctf';
-% cfg.template = mri_nromg;
-mri_warp_def = ft_volumenormalise(cfg, mri_colin);
+cfg.nonlinear        = 'yes';       % Non-linear warping
+cfg.spmmethod        = 'old';       % Note: method = "new" will  use SPM's default posterior tissue maps,. not the template
+cfg.spmversion       = 'spm12';     % Default = "spm12"
+cfg.templatecoordsys = 'acpc';      % Coordinate system of the template
+cfg.template         = fullfile(sub_path,'orig_acpc_rs.nii');
+mri_temp2sub = ft_volumenormalise(cfg, mri_colin);
 
-%% Plot
-ft_sourceplot([],mri_warp_ctf); title('Warped CTF')
-ft_sourceplot([],mri_warp_nmg); title('Warped Neuromag')
-ft_sourceplot([],mri_warp_def); title('Warped defaults')
+% Resture unit information (mm)
+mri_temp2sub = ft_determine_units(mri_temp2sub)
 
-% Works for both acpc and neuromag nad now cft
-tst = ft_convert_coordsys(mri_warp_nmg, 'ctf')
+% Plot for inspection
+ft_sourceplot([],mri_temp2sub); title('Warped2acpc')
 
-ft_sourceplot([],tst); title('Warped Neuromag')
+%% Normalise template -> subject (neuromag subject template)
+cfg = [];
+cfg.nonlinear        = 'yes';       % Non-linear warping
+cfg.spmmethod        = 'old';       % Note: method = "new" will only use SPM's default posterior tissue maps.
+cfg.spmversion       = 'spm12';     % Default = "spm12"
+cfg.templatecoordsys = 'neuromag';  % Coordinate system of the template
+cfg.template         = fullfile(sub_path,'orig_neuromag_rs.nii');
+mri_warp2neuromag = ft_volumenormalise(cfg, mri_colin);
 
-%%
-ft_sourceplot([],tst); 
-%%
+% Plot for inspection
+ft_sourceplot([],mri_warp2neuromag); title('Warped2neuromag')
 
 
+%% Normalise template -> subject (ctf subject template)
+cfg = [];
+cfg.nonlinear        = 'yes';       % Non-linear warping
+cfg.spmmethod        = 'old';       % Note: method = "new" will only use SPM's default posterior tissue maps.
+cfg.spmversion       = 'spm12';     % Default = "spm12"
+cfg.templatecoordsys = 'ctf';      % Coordinate system of the template
+cfg.template         = fullfile(sub_path,'orig_ctf_rs.nii');
+mri_warp2ctf = ft_volumenormalise(cfg, mri_colin);
+
+% Plot for inspection
+ft_sourceplot([],mri_warp2ctf); title('Warped2ctf')
+
+%% Save
+mri_temp2sub = mri_warp2acpc;       % Rename for now!
+fprintf('saving...')
+save(fullfile(sub_path,'mri_temp2sub'), 'mri_temp2sub')
+fprintf('done\n')
+
+%% Preapre for Freesurfer
+% Save in mgz format in a Freesurfer suubject directory to run Freesurfer's
+% recon-all later (only works on Linux).
+fs_subjdir = '/home/mikkel/mri_scripts/warpig/fs_subjects_dir/';
+
+cfg = [];
+cfg.filename    = fullfile(fs_subjdir, subj{1}, 'mri','orig', '001');
+cfg.filetype    = 'mgz';
+cfg.parameter   = 'anatomy';
+ft_volumewrite(cfg, mri_temp2sub);
 
 
+%% THIS IS WHERE THE PROCESSING ENDS.
+% It contimues in the script create_headmodel.m
+
+%% Old tests
 % A) Non-linear normalization (SPM8) (Gives Cronenberg image)
 cfg = [];
 cfg.nonlinear = 'yes';
@@ -135,23 +230,6 @@ cfg.nonlinear = 'no';
 cfg.template = fullfile(sub_path,'orig_acpc.nii');
 cfg.spmversion = 'spm8';
 mri_norm_lin = ft_volumenormalise(cfg, mri_colin);
-
-
-%% Determine coordsys
-mri_norm_spm8   = ft_determine_units(mri_norm_spm8);
-mri_norm_spm12  = ft_determine_units(mri_norm_spm12);
-mri_norm_lin    = ft_determine_units(mri_norm_lin);
-
-%% Plot
-cfg = [];
-cfg.funparameter = 'anatomy';
-
-ft_sourceplot([],mri_colin); title('Original Colin')
-ft_sourceplot([],mri_norm_spm8); title('Norm (non-lienar, SPM8)')
-ft_sourceplot([],mri_norm_spm12); title('Norm (non-lienar, SPM12, new method)')
-ft_sourceplot([],mri_norm_lin); title('Norm (linear, SPM12)')
-
-ft_sourceplot([],mri_acpc_resliced); title('Original sub')
 
 %% Save template
 fprintf('saving...')
