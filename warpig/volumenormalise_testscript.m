@@ -1,5 +1,6 @@
 % Test functionality of normalising custom MRI in different coordinate
 % systems.
+close all; clear all
 ftpath = '/home/mikkel/fieldtrip/fieldtrip';
 addpath(ftpath)
 % addpath(fullfile(ftpath,'external/spm12'))
@@ -11,16 +12,22 @@ spmversions = {'spm2', 'spm8', 'spm12'};
 spmmethods   = {'old','new','mars'};
 
 fpath   = '/home/mikkel/mri_scripts/warpig/warptest';
-outpath = '/home/mikkel/mri_scripts/warpig/warptest/output';
+outpath = '/home/mikkel/mri_scripts/warpig/warptest/output2';
 
 %% Load and prepare MRI
-mri1 = ft_read_mri('/home/mikkel/mri_scripts/warpig/data/MC/00000002/00000001.dcm');
-mri2 = ft_read_mri('/home/mikkel/mri_scripts/warpig/data/RO/20160825/PAUGAA_20160825_MEGANATOMY.MR.DCCN_PRISMAFIT.0002.0046.2016.08.25.16.54.09.114696.482173804.IMA');
-mri1 = ft_determine_coordsys(mri1, 'interactive', 'yes');
-mri2 = ft_determine_coordsys(mri2, 'interactive', 'yes');
+% mri1 = ft_read_mri('/home/mikkel/mri_scripts/warpig/data/MC/00000002/00000001.dcm');
+% mri2 = ft_read_mri('/home/mikkel/mri_scripts/warpig/data/RO/20160825/PAUGAA_20160825_MEGANATOMY.MR.DCCN_PRISMAFIT.0002.0046.2016.08.25.16.54.09.114696.482173804.IMA');
+% mri1 = ft_determine_coordsys(mri1, 'interactive', 'yes');
+% mri2 = ft_determine_coordsys(mri2, 'interactive', 'yes');
+% 
+% ft_sourceplot([],mri1)
+% ft_sourceplot([],mri2)
+% 
+% save('/home/mikkel/mri_scripts/warpig/warptest/mri1.mat', 'mri1')
+% save('/home/mikkel/mri_scripts/warpig/warptest/mri2.mat', 'mri2')
 
-ft_sourceplot([],mri1)
-ft_sourceplot([],mri2)
+load('/home/mikkel/mri_scripts/warpig/warptest/mri1.mat')
+load('/home/mikkel/mri_scripts/warpig/warptest/mri2.mat')
 
 %% Create from MRI with all coordinate systems
 mris_from = [];
@@ -29,12 +36,12 @@ for ii = 1:length(coordsysts)
   coordsys = coordsysts{ii};
   disp(coordsys)
   
-%   cfg = [];
-%   cfg.method = 'interactive';
-%   cfg.coordsys = coordsys; 
-%   mris_from.(coordsys)  = ft_volumerealign(cfg, mri1);
-%   mris_to.(coordsys)    = ft_volumerealign(cfg, mri2);
-%    
+  cfg = [];
+  cfg.method = 'interactive';
+  cfg.coordsys = coordsys; 
+  mris_from.(coordsys)  = ft_volumerealign(cfg, mri1);
+  mris_to.(coordsys)    = ft_volumerealign(cfg, mri2);
+   
   %Export 
   cfg = [];
   cfg.filetype    = 'nifti';          % .nii exntension
@@ -44,6 +51,9 @@ for ii = 1:length(coordsysts)
 end
 
 save(fullfile(outpath, 'mris'), 'mris_from', 'mris_to')
+
+load(fullfile(outpath, 'mris'))
+
 
 %% Test default functionality (anything -> SPM template)
 mris_norm2temp = [];
@@ -58,7 +68,7 @@ for ii = 1:length(coordsysts)
             
         ft_sourceplot([], mris_norm2temp.([cfg.spmversion,cfg.spmmethod]))
         title([coordsysts{ii},' to SPM template (',cfg.spmversion,cfg.spmmethod,')'])
-        saveas(gcf, fullfile(outpath, [coordsysts{ii},' to SPM template (',cfg.spmversion,cfg.spmmethod,')']))
+        saveas(gcf, fullfile(outpath, [coordsysts{ii},'2template_',cfg.spmversion,cfg.spmmethod,'.pdf']))
         close
       end
     else
@@ -72,10 +82,11 @@ for ii = 1:length(coordsysts)
     end
   end
 end 
-    
+fprintf('saving... '); save(fullfile(outpath, 'mris_norm2temp.mat'),'mris_norm2temp'); disp('done');    
 
 %% Custom MRI template
 mris_warped   = [];
+failed = [];
 coordsys_from = coordsysts;
 cordsys_to    = coordsysts;
 
@@ -99,8 +110,13 @@ for ii = 1:length(coordsys_from)
           close
         catch
           fprintf('%s to %s (%s) failed\n', ci, cj, cfg.spmversion)
+          failed{end+1} = [ci,'2',cj,'_',cfg.spmversion];
           mris_warped.([ci,'2',cj,'_',cfg.spmversion]) = 'error';
         end
       end
   end
 end
+fprintf('saving... '); save(fullfile(outpath, 'mris_warped.mat'),'mris_warped'); disp('done');
+fprintf('%i conversions failed\n', length(failed))
+
+%END
