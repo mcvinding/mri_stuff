@@ -72,24 +72,24 @@ cfg.parameter   = 'anatomy';
 cfg.filename    = fullfile(sub_path,'orig_acpc_rs');   % Same base filename but different format
 ft_volumewrite(cfg, mri_acpc_resliced)
 
-% %% Convert to Neuromag format
-% cfg = [];
-% cfg.method = 'interactive';
-% cfg.coordsys = 'neuromag';  
-% mri_neuromag = ft_volumerealign(cfg, mri_coord);       
-% 
-% % Not that if it gives warnings about left/right it might lead to erros
-% 
-% % Reslice to new coordinate system
-% mri_neuromag_resliced = ft_volumereslice([], mri_neuromag);
-% 
-% % Save subject volume as the "template". The template anatomy should always
-% % be stored in a SPM-compatible file (i.e. NIFTI).
-% cfg = [];
-% cfg.filetype    = 'nifti';          % .nii exntension
-% cfg.parameter   = 'anatomy';
-% cfg.filename    = fullfile(sub_path,'orig_neuromag_rs');   % Same base filename but different format
-% ft_volumewrite(cfg, mri_neuromag_resliced)
+%% Convert to Neuromag format
+cfg = [];
+cfg.method = 'interactive';
+cfg.coordsys = 'neuromag';  
+mri_neuromag = ft_volumerealign(cfg, mri_coord);       
+
+% Not that if it gives warnings about left/right it might lead to erros
+
+% Reslice to new coordinate system
+mri_neuromag_resliced = ft_volumereslice([], mri_neuromag);
+
+% Save subject volume as the "template". The template anatomy should always
+% be stored in a SPM-compatible file (i.e. NIFTI).
+cfg = [];
+cfg.filetype    = 'nifti';          % .nii exntension
+cfg.parameter   = 'anatomy';
+cfg.filename    = fullfile(sub_path,'orig_neuromag_rs');   % Same base filename but different format
+ft_volumewrite(cfg, mri_neuromag_resliced)
 % 
 % %% Convert to ctf coordsys
 % cfg = [];
@@ -125,14 +125,17 @@ cfg.spmmethod        = 'old';       % Note: method = "new" will  use SPM's defau
 cfg.spmversion       = 'spm12';     % Default = "spm12"
 cfg.templatecoordsys = 'acpc';      % Coordinate system of the template
 cfg.template         = fullfile(sub_path,'orig_acpc_rs2.nii');
-mri_temp2sub = ft_volumenormalise(cfg, mri_colin);
+mri_warp2acpc = ft_volumenormalise(cfg, mri_colin);
 
 % Determine unit of volume (mm)
-mri_temp2sub = ft_determine_units(mri_temp2sub);
+mri_warp2acpc = ft_determine_units(mri_warp2acpc);
 
 % Plot for inspection
-ft_sourceplot([],mri_temp2sub); title('Warped template to subject')
-
+ft_sourceplot([],mri_warp2acpc); title('Warped template to subject')
+saveas(gcf, fullfile(out_folder, ['template2',cfg.templatecoordsys,'.pdf']))
+close
+      
+      
 %% Normalise template -> subject (neuromag subject template)
 cfg = [];
 cfg.nonlinear        = 'yes';       % Non-linear warping
@@ -147,7 +150,9 @@ mri_warp2neuromag = ft_determine_units(mri_warp2neuromag);
 
 % Plot for inspection
 ft_sourceplot([],mri_warp2neuromag); title('Warped2neuromag')
-
+saveas(gcf, fullfile(out_folder, ['template2',cfg.templatecoordsys,'.pdf']))
+close
+      
 %% Normalise template -> subject (ctf subject template)
 % Something is wrong in the initial alignment and how SPM use this to
 % calculate the inital Affine alignment.
@@ -167,10 +172,10 @@ ft_sourceplot([],mri_warp2ctf); title('Warped2ctf')
 
 %% Save
 fprintf('saving...')
-save(fullfile(sub_path,'mri_temp2sub'), 'mri_temp2sub')
+save(fullfile(sub_path,'mri_warp2acpc'), 'mri_warp2acpc')
 save(fullfile(sub_path,'mri_warp2ctf'), 'mri_warp2ctf')
 save(fullfile(sub_path,'mri_warp2neuromag'), 'mri_warp2neuromag')
-fprintf('done\n')
+disp('done')
 
 %% Preapre for Freesurfer
 % Save in mgz format in a Freesurfer suubject directory to run Freesurfer's
@@ -181,7 +186,6 @@ cfg = [];
 cfg.filename    = fullfile(fs_subjdir, subj{1}, 'mri','orig', '001');
 cfg.filetype    = 'mgz';
 cfg.parameter   = 'anatomy';
-ft_volumewrite(cfg, mri_temp2sub);
-
+ft_volumewrite(cfg, mri_warp2acpc);
 
 % END

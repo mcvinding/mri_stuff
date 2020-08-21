@@ -13,8 +13,8 @@ raw_folder = '/home/share/workshop_source_reconstruction/20180206/MEG/NatMEG_017
 data_path  = '/home/mikkel/mri_scripts/warpig/data/0177';
 
 %% Load MRI
-load(fullfile(data_path, 'mri_temp2sub.mat'));   % Warped template MRI
-load(fullfile(data_path, 'mri_orig.mat'));       % original subject MRI
+load(fullfile(data_path, 'mri_warp2neuromag.mat'));   % Warped template MRI
+load(fullfile(data_path, 'mri_orig.mat'));        % original subject MRI
 
 %% STEP 2A: Align MRI and MEG headpoints in MEG coordinate system (neuromag)
 % Get headshapes and sensor info from MEG file
@@ -22,7 +22,7 @@ rawfile     = fullfile(raw_folder, 'tactile_stim_raw_tsss_mc.fif');
 headshape   = ft_read_headshape(rawfile);
 grad        = ft_read_sens(rawfile,'senstype','meg'); % Load MEG sensors
 
-% Make sure units are mm
+% Make sure units are mm 
 headshape = ft_convert_units(headshape, 'mm');
 grad      = ft_convert_units(grad, 'mm');
 
@@ -30,14 +30,12 @@ grad      = ft_convert_units(grad, 'mm');
 save(fullfile(data_path, 'headshape'), 'headshape')
 save(fullfile(data_path, 'grad'), 'grad')
 
-% Determine units (might already be done before !?!)
-mri_temp2sub = ft_determine_units(mri_temp2sub);
-
-% Initial alignment of normalized MRI to neuromag coordinate system
+% Initial alignment of normalized MRI to neuromag coordinate system (this
+% step can be omitted by loading the correct files)
 cfg = [];
 cfg.method   = 'interactive';
 cfg.coordsys = 'neuromag';
-mri_tmp_realign1 = ft_volumerealign(cfg, mri_temp2sub);
+mri_tmp_realign1 = ft_volumerealign(cfg, mri_warp2neuromag);
 mri_org_realign1 = ft_volumerealign(cfg, mri_orig);
 
 % Aligh MRI to MEG headpoints
@@ -57,6 +55,7 @@ mri_org_realign3 = ft_volumerealign(cfg, mri_org_realign2);
 % Save
 save(fullfile(data_path, 'mri_tmp_realign3'), 'mri_tmp_realign3')
 save(fullfile(data_path, 'mri_org_realign3'), 'mri_org_realign3')
+disp('done')
 
 %% STEP 2B: reslice aligned MRI
 % tic
@@ -78,7 +77,7 @@ mri_org_seg = ft_volumesegment(cfg, mri_org_resliced);
 
 % Save 
 save(fullfile(data_path, 'mri_tmp_seg.mat'), 'mri_tmp_seg')
-save(fullfile(data_path, 'mri_org_seq.mat'), 'mri_org_seq')
+save(fullfile(data_path, 'mri_org_seq.mat'), 'mri_org_seg')
 
 % Plot segmentations for inspection
 mri_tmp_seg.anatomy = mri_tmp_resliced.anatomy;
@@ -114,6 +113,7 @@ headmodel_org = ft_prepare_headmodel(cfg, mesh_brain_org);
 % Save headmodels
 save(fullfile(data_path, 'headmodel_tmp.mat'), 'headmodel_tmp')
 save(fullfile(data_path, 'headmodel_org.mat'), 'headmodel_org')
+disp('done')
 
 %% Plot headmodels for inspection
 subplot(1,2,1); hold on

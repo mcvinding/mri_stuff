@@ -14,13 +14,9 @@ load(fullfile(data_path, 'dip_grad_late.mat'))
 
 %% Compare dip: mags early component
 norm(dip_mag_early_orig.dip.pos-dip_mag_early_lin.dip.pos)
-norm(dip_mag_early_orig.dip.pos-dip_mag_early_spm12.dip.pos)
-norm(dip_mag_early_spm12.dip.pos-dip_mag_early_lin.dip.pos)
 
 %% Compare dip: mags late component
 norm(dip_mag_late_orig.dip.pos(1,:)-dip_mag_late_lin.dip.pos(2,:))
-norm(dip_mag_late_orig.dip.pos(1,:)-dip_mag_late_spm12.dip.pos(1,:))
-norm(dip_mag_late_spm12.dip.pos(1,:)-dip_mag_late_lin.dip.pos(2,:))
 
 %% Compare dip: grads early component
 norm(dip_grad_early_orig.dip.pos-dip_grad_early_lin.dip.pos)
@@ -42,5 +38,5 @@ dip_mag_early_orig.Vdiff = dip_mag_early_orig.Vdata-dip_mag_early_orig.Vmodel;
 cfg = [];
 cfg.layout = 'neuromag306mag.lay';
 cfg.parameter = 'Vdiff';
-ft_multiplotER(cfg, rmfield(dip_mag_early_orig, 'dip'))
 
+figure; ft_multiplotER(cfg, rmfield(dip_mag_early_orig, 'dip'))
