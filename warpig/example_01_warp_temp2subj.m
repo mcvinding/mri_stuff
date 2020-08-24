@@ -17,11 +17,11 @@ else
 end
 
 %% Subject
-subj = {'0177'};
+subjs = {'0177','MC','RO'};
 
 %% Paths
 mri_path = fullfile(raw_folder, 'MRI','dicoms');
-sub_path = fullfile(out_folder, subj{1});
+sub_path = fullfile(out_folder, subjs{1});
 
 %% STEP 1A: Load subject MRI and save as "template"
 % Load the subject anatomical image. Determine coordinate systen (ras, origin not
@@ -40,6 +40,16 @@ mri_orig = ft_determine_coordsys(mri_orig, 'interactive', 'yes');
 
 %Save (for later comparison)
 save(fullfile(sub_path, 'mri_orig.mat'), 'mri_orig')
+
+%% Alternative MRI #1
+load('/home/mikkel/mri_scripts/warpig/warptest/mri1.mat')
+mri_orig = mri1;
+sub_path = fullfile(out_folder, subjs{2});
+
+%% Alternative MRI #2
+load('/home/mikkel/mri_scripts/warpig/warptest/mri2.mat')
+mri_orig = mri2;
+sub_path = fullfile(out_folder, subjs{3});
 
 %% Convert subject MRI to acpc coordinate system
 % Convert to the desired coordinate system. In this e example we convert to
@@ -62,10 +72,12 @@ mri_acpc_resliced = ft_volumereslice([], mri_acpc);
 % Plot for inspection
 ft_sourceplot([], mri_acpc_resliced); title('orig MRI acpc')
 
+%Save
+fprintf('saving...'); save(fullfile(sub_path,'mri_acpc_resliced'), 'mri_orig'); disp('done')
+
 %% Write subject volume as the "template". 
 % The template anatomy should always be stored in a SPM-compatible file (i.e.
 % NIFTI).
-
 cfg = [];
 cfg.filetype    = 'nifti';          % .nii exntension
 cfg.parameter   = 'anatomy';
@@ -121,10 +133,10 @@ mri_colin = mri;   % Rename to avoid confusion
 %% Normalise template -> subject (acpc subject template)
 cfg = [];
 cfg.nonlinear        = 'yes';       % Non-linear warping
-cfg.spmmethod        = 'old';       % Note: method = "new" will  use SPM's default posterior tissue maps,. not the template
+cfg.spmmethod        = 'old';       % Note: method = "new" will  use SPM's default posterior tissue maps not the template
 cfg.spmversion       = 'spm12';     % Default = "spm12"
 cfg.templatecoordsys = 'acpc';      % Coordinate system of the template
-cfg.template         = fullfile(sub_path,'orig_acpc_rs2.nii');
+cfg.template         = fullfile(sub_path,'orig_acpc_rs.nii');
 mri_warp2acpc = ft_volumenormalise(cfg, mri_colin);
 
 % Determine unit of volume (mm)
@@ -132,7 +144,7 @@ mri_warp2acpc = ft_determine_units(mri_warp2acpc);
 
 % Plot for inspection
 ft_sourceplot([],mri_warp2acpc); title('Warped template to subject')
-saveas(gcf, fullfile(out_folder, ['template2',cfg.templatecoordsys,'.pdf']))
+saveas(gcf, fullfile(sub_path, ['template2',cfg.templatecoordsys,'.pdf']))
 close
       
       
@@ -150,7 +162,7 @@ mri_warp2neuromag = ft_determine_units(mri_warp2neuromag);
 
 % Plot for inspection
 ft_sourceplot([],mri_warp2neuromag); title('Warped2neuromag')
-saveas(gcf, fullfile(out_folder, ['template2',cfg.templatecoordsys,'.pdf']))
+saveas(gcf, fullfile(sub_path, ['template2',cfg.templatecoordsys,'.pdf']))
 close
       
 %% Normalise template -> subject (ctf subject template)
@@ -173,8 +185,8 @@ ft_sourceplot([],mri_warp2ctf); title('Warped2ctf')
 %% Save
 fprintf('saving...')
 save(fullfile(sub_path,'mri_warp2acpc'), 'mri_warp2acpc')
-save(fullfile(sub_path,'mri_warp2ctf'), 'mri_warp2ctf')
-save(fullfile(sub_path,'mri_warp2neuromag'), 'mri_warp2neuromag')
+% save(fullfile(sub_path,'mri_warp2ctf'), 'mri_warp2ctf')
+% save(fullfile(sub_path,'mri_warp2neuromag'), 'mri_warp2neuromag')
 disp('done')
 
 %% Preapre for Freesurfer
@@ -183,7 +195,7 @@ disp('done')
 fs_subjdir = '/home/mikkel/mri_scripts/warpig/fs_subjects_dir/';
 
 cfg = [];
-cfg.filename    = fullfile(fs_subjdir, subj{1}, 'mri','orig', '001');
+cfg.filename    = fullfile(fs_subjdir, subjs{1}, 'mri','orig', '001');
 cfg.filetype    = 'mgz';
 cfg.parameter   = 'anatomy';
 ft_volumewrite(cfg, mri_warp2acpc);

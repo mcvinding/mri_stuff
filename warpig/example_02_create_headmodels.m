@@ -9,12 +9,20 @@ addpath '~/fieldtrip/fieldtrip/external/mne'
 ft_defaults
 
 %% Compute paths
+subjs = {'0177','MC','RO'};
+
+subj = 3;
+
 raw_folder = '/home/share/workshop_source_reconstruction/20180206/MEG/NatMEG_0177/170424';
-data_path  = '/home/mikkel/mri_scripts/warpig/data/0177';
+data_path  = fullfile('/home/mikkel/mri_scripts/warpig/data/',subjs{subj});
 
 %% Load MRI
-load(fullfile(data_path, 'mri_warp2neuromag.mat'));   % Warped template MRI
-load(fullfile(data_path, 'mri_orig.mat'));        % original subject MRI
+load(fullfile(data_path, 'mri_warp2acpc.mat'));   % Warped template MRI
+load(fullfile(data_path, 'mri_acpc_resliced.mat'));        % original subject MRI
+
+%% temp
+mri_tmp_resliced = mri_warp2acpc;
+mri_org_resliced = mri_acpc_resliced;
 
 %% STEP 2A: Align MRI and MEG headpoints in MEG coordinate system (neuromag)
 % Get headshapes and sensor info from MEG file
@@ -30,13 +38,13 @@ grad      = ft_convert_units(grad, 'mm');
 save(fullfile(data_path, 'headshape'), 'headshape')
 save(fullfile(data_path, 'grad'), 'grad')
 
-% Initial alignment of normalized MRI to neuromag coordinate system (this
-% step can be omitted by loading the correct files)
-cfg = [];
-cfg.method   = 'interactive';
-cfg.coordsys = 'neuromag';
-mri_tmp_realign1 = ft_volumerealign(cfg, mri_warp2neuromag);
-mri_org_realign1 = ft_volumerealign(cfg, mri_orig);
+% % Initial alignment of normalized MRI to neuromag coordinate system (this
+% % step can be omitted by loading the correct files)
+% cfg = [];
+% cfg.method   = 'interactive';
+% cfg.coordsys = 'neuromag';
+% mri_tmp_realign1 = ft_volumerealign(cfg, mri_warp2neuromag);
+% mri_org_realign1 = ft_volumerealign(cfg, mri_orig);
 
 % Aligh MRI to MEG headpoints
 cfg = [];
@@ -91,7 +99,7 @@ ft_sourceplot(cfg, mri_org_seg);
 
 % Plot both segmentations on original volume
 pltvol = mri_org_resliced;
-pltvol.brain = mri_org_seg.brain + mri_tmp_seg.brain;
+pltvol.brain = mri_tmp_seg.brain++mri_org_seg.brain;
 
 cfg.anaparameter = 'anatomy';
 cfg.funparameter = 'brain';

@@ -5,7 +5,11 @@ addpath '~/fieldtrip/fieldtrip/'
 ft_defaults
 
 %% Paths
-data_path = '/home/mikkel/mri_scripts/warpig/data/0177';
+subjs = {'0177','MC','RO'};
+
+subj = 3;
+
+data_path  = fullfile('/home/mikkel/mri_scripts/warpig/data/',subjs{subj});
 
 %% Load headmodels
 % Add a loop over files when testing
