@@ -16,12 +16,10 @@ clear sourcemodel;
 
 %% Load data
 % Load headmodel and MRI
-load(fullfile(data_path, 'headmodel_lin.mat'));
-load(fullfile(data_path, 'mri_lin_rs.mat'));
+load(fullfile(data_path, 'headmodel_tmp.mat'));
+load(fullfile(data_path, 'mri_tmp_resliced.mat'));
 load(fullfile(data_path, 'headmodel_orig.mat'));
-load(fullfile(data_path, 'mri_orig_rs.mat'));
-load(fullfile(data_path, 'headmodel_spm12.mat'));
-load(fullfile(data_path, 'mri_spm12_rs.mat'));
+load(fullfile(data_path, 'mri_org_resliced.mat'));
 
 %% Make grid sourcemodels
 % orig
@@ -30,8 +28,8 @@ cfg.warpmni         = 'yes';
 cfg.nonlinear       = 'yes';
 cfg.unit            = 'mm';
 cfg.template        = template_grid;
-cfg.mri             = mri_orig_rs;
-cfg.spmversion      = 'spm12';          % SPM8 makes wierd source space.
+cfg.mri             = mri_org_resliced;
+cfg.spmversion      = 'spm12';
 cfg.spmmethod       = 'new';
 sourcemodel_orig = ft_prepare_sourcemodel(cfg);
 
@@ -41,31 +39,17 @@ cfg.warpmni         = 'yes';
 cfg.nonlinear       = 'yes';
 cfg.unit            = 'mm';
 cfg.template        = template_grid;
-cfg.mri             = mri_spm12_rs;
-cfg.spmversion      = 'spm12';          % SPM8 makes wierd source space.
+cfg.mri             = mri_tmp_resliced;
+cfg.spmversion      = 'spm12';
 cfg.spmmethod       = 'new';
-sourcemodel_spm12 = ft_prepare_sourcemodel(cfg);
-
-% lin
-cfg = [];
-cfg.warpmni         = 'yes';
-cfg.nonlinear       = 'yes';
-cfg.unit            = 'mm';
-cfg.template        = template_grid;
-cfg.mri             = mri_lin_rs;
-cfg.spmversion      = 'spm12';          % SPM8 makes wierd source space.
-cfg.spmmethod       = 'new';
-sourcemodel_lin = ft_prepare_sourcemodel(cfg);
+sourcemodel_tmp = ft_prepare_sourcemodel(cfg);
 
 %% Save
-save(fullfile(data_path, 'sourcemodel_orig'), 'sourcemodel_orig')
-save(fullfile(data_path, 'sourcemodel_spm12'), 'sourcemodel_spm12')
-save(fullfile(data_path, 'sourcemodel_lin'), 'sourcemodel_lin')
+save(fullfile(data_path, 'sourcemodels'), 'sourcemodel_orig', 'sourcemodel_tmp')
 
 %% Inspect
 figure; hold on
-ft_plot_mesh(sourcemodel_lin.pos(sourcemodel_lin.inside,:), 'vertexcolor','y');
+ft_plot_mesh(sourcemodel_tmp.pos(sourcemodel_tmp.inside,:), 'vertexcolor','y');
 ft_plot_mesh(sourcemodel_orig.pos(sourcemodel_orig.inside,:), 'vertexcolor','b');
-ft_plot_mesh(sourcemodel_spm12.pos(sourcemodel_spm12.inside,:), 'vertexcolor','r');
 
 %END

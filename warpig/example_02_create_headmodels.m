@@ -11,18 +11,18 @@ ft_defaults
 %% Compute paths
 subjs = {'0177','MC','RO'};
 
-subj = 3;
+subj = 2;
 
 raw_folder = '/home/share/workshop_source_reconstruction/20180206/MEG/NatMEG_0177/170424';
 data_path  = fullfile('/home/mikkel/mri_scripts/warpig/data/',subjs{subj});
 
 %% Load MRI
-load(fullfile(data_path, 'mri_warp2acpc.mat'));   % Warped template MRI
-load(fullfile(data_path, 'mri_acpc_resliced.mat'));        % original subject MRI
+load(fullfile(data_path, 'mri_warp2acpc.mat'));         % Warped template MRI
+load(fullfile(data_path, 'mri_acpc_resliced.mat'));     % original subject MRI
 
 %% temp
 mri_tmp_resliced = mri_warp2acpc;
-mri_org_resliced = mri_acpc_resliced;
+mri_org_resliced = mri_orig;
 
 %% STEP 2A: Align MRI and MEG headpoints in MEG coordinate system (neuromag)
 % Get headshapes and sensor info from MEG file
@@ -99,7 +99,7 @@ ft_sourceplot(cfg, mri_org_seg);
 
 % Plot both segmentations on original volume
 pltvol = mri_org_resliced;
-pltvol.brain = mri_tmp_seg.brain++mri_org_seg.brain;
+pltvol.brain = mri_tmp_seg.brain+mri_org_seg.brain;
 
 cfg.anaparameter = 'anatomy';
 cfg.funparameter = 'brain';

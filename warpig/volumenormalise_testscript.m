@@ -12,7 +12,7 @@ spmversions = {'spm2', 'spm8', 'spm12'};
 spmmethods   = {'old','new','mars'};
 
 fpath   = '/home/mikkel/mri_scripts/warpig/warptest';
-outpath = '/home/mikkel/mri_scripts/warpig/warptest/output2';
+outpath = '/home/mikkel/mri_scripts/warpig/warptest/output3';
 
 %% Load and prepare MRI
 % mri1 = ft_read_mri('/home/mikkel/mri_scripts/warpig/data/MC/00000002/00000001.dcm');
@@ -36,11 +36,11 @@ for ii = 1:length(coordsysts)
   coordsys = coordsysts{ii};
   disp(coordsys)
   
-  cfg = [];
-  cfg.method = 'interactive';
-  cfg.coordsys = coordsys; 
-  mris_from.(coordsys)  = ft_volumerealign(cfg, mri1);
-  mris_to.(coordsys)    = ft_volumerealign(cfg, mri2);
+%   cfg = [];
+%   cfg.method = 'interactive';
+%   cfg.coordsys = coordsys; 
+%   mris_from.(coordsys)  = ft_volumerealign(cfg, mri1);
+%   mris_to.(coordsys)    = ft_volumerealign(cfg, mri2);
    
   %Export 
   cfg = [];

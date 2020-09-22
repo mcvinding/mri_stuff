@@ -20,13 +20,13 @@ data = ft_selectdata(cfg, cleaned_downsampled_data);
 %% TFR (for inspection)
 cfg = [];
 cfg.output      = 'pow';        
-cfg.channel     = 'MEG';      % Change to 'MEG*1' to analyse all channels
+cfg.channel     = 'MEG';
 cfg.method      = 'mtmconvol';
-cfg.taper       = 'dpss';       % Slepian sequence as tapers
-cfg.foi         = 1:1:45;       % Frequencies we want to estimate from 1 Hz to 45 Hz in steps of 1HZ
-cfg.toi         = -1.650:0.01:1.650;             % Times to center on
-cfg.t_ftimwin   = 5./cfg.foi;   % length of time window
-cfg.tapsmofrq   = 0.5 *cfg.foi; % Smoothing
+cfg.taper       = 'dpss';
+cfg.foi         = 1:1:45;
+cfg.toi         = -2:0.01:2;
+cfg.t_ftimwin   = 5./cfg.foi;
+cfg.tapsmofrq   = 0.5 *cfg.foi;
 
 tfr = ft_freqanalysis(cfg, data);
 
@@ -39,8 +39,28 @@ cfg.baseline        = [-inf 0];    % Time of baseline
 
 figure; ft_multiplotTFR(cfg, tfr);
 
+% Wavelet
+cfg = [];
+cfg.output      = 'pow';        
+cfg.channel     = 'MEG';
+cfg.method      = 'wavelet';
+cfg.foi         = 1:1:45;
+cfg.toi         = -2:0.01:2;
+cfg.width       = 7;
+
+tfr = ft_freqanalysis(cfg, data);
+
+cfg = [];
+cfg.parameter       = 'powspctrm';
+cfg.layout          = 'neuromag306mag';
+cfg.showlabels      = 'yes';
+cfg.baselinetype    = 'relative';  % Type of baseline, see help ft_multiplotTFR
+cfg.baseline        = [-0.5 0];    % Time of baseline
+
+figure; ft_multiplotTFR(cfg, tfr);
+
 %% Process data
-desync_toi     = [0.220 0.500];
+desync_toi   = [0.220 0.500];
 baseline_toi = [-0.500 -0.220];
 
 % Define segments
@@ -59,7 +79,7 @@ cfg.method     = 'mtmfft';
 cfg.output     = 'powandcsd';
 cfg.taper      = 'hanning';
 cfg.channel    = 'meg';
-cfg.foilim     = [16 16];
+cfg.foilim     = [20 20];
 cfg.keeptrials = 'no';
 cfg.pad        = 'nextpow2';
 
@@ -68,100 +88,106 @@ pow_baseline = ft_freqanalysis(cfg, tois_baseline);
 pow_combined = ft_freqanalysis(cfg, tois_combined);
 
 %% Load headmodels and source spaces
-load(fullfile(data_path, 'headmodel_lin.mat'));
-load(fullfile(data_path, 'headmodel_orig.mat'));
-load(fullfile(data_path, 'headmodel_spm12.mat'));
+load(fullfile(data_path, 'headmodel_org.mat'));
+load(fullfile(data_path, 'headmodel_tmp.mat'));
 
-load(fullfile(data_path, 'sourcemodel_lin.mat'));
-load(fullfile(data_path, 'sourcemodel_orig.mat'));
-load(fullfile(data_path, 'sourcemodel_spm12.mat'));
+load(fullfile(data_path, 'sourcemodels.mat'));
 
 %% Make leadfields
-
 cfg = [];
 cfg.grad            = pow_combined.grad;    % magnetometer and gradiometer specification
-cfg.headmodel       = headmodel_orig;       % headmodel used
 cfg.channel         = 'meg';
-cfg.resolution      = 1; 
-cfg.grid.unit       = 'cm'; 
 cfg.senstype        = 'meg';
+
+cfg.sourcemodel     = sourcemodel_orig;
+cfg.headmodel       = headmodel_orig;
 
 leadfield_orig = ft_prepare_leadfield(cfg);
 
-cfg.headmodel       = headmodel_orig;       % headmodel used
-leadfield_lin = ft_prepare_leadfield(cfg);
-
-cfg.headmodel       = headmodel_spm12;      % headmodel used
-leadfield_spm12 = ft_prepare_leadfield(cfg);
+cfg.sourcemodel     = sourcemodel_tmp;
+cfg.headmodel       = headmodel_tmp;
+leadfield_tmp = ft_prepare_leadfield(cfg);
 
 %% DICS
 cfg = [];
-cfg.method              = 'dics';                   % Dynamic Imaging of Coherent Sources
-cfg.frequency           = pow_combined.freq;        % the frequency from the fourier analysis (as defined above to be 16 Hz)
-cfg.dics.projectnoise   = 'yes';                    % estimate noise
-cfg.dics.lambda         = '5%';                    % how to regularise
-cfg.dics.keepfilter     = 'yes';                    % keep the spatial filter in the output
-cfg.dics.realfilter     = 'yes';                    % retain the real values
-cfg.channel             = 'meg'; % Try change to grad and mag
+cfg.method              = 'dics';
+cfg.frequency           = pow_combined.freq;
+cfg.dics.projectnoise   = 'yes';
+cfg.dics.lambda         = '5%';
+cfg.dics.keepfilter     = 'yes';
+cfg.dics.realfilter     = 'yes'; 
+cfg.channel             = 'meg'; 
 cfg.senstype            = 'meg';
 cfg.grad                = pow_combined.grad;
 
-% ORIG
-cfg.sourcemodel         = leadfield_orig;                % Our grid and the leadfield
-cfg.headmodel           = headmodel_orig;                % our headmodel (tells us how the magnetic field/electrical potential is propagated)
+% Original
+cfg.sourcemodel         = leadfield_orig;       
+cfg.headmodel           = headmodel_orig;
 dics_combined_orig = ft_sourceanalysis(cfg, pow_combined);    
 cfg.sourcemodel.filter = dics_combined_orig.avg.filter;    
 dics_desy_orig = ft_sourceanalysis(cfg, pow_desync);
 dics_base_orig = ft_sourceanalysis(cfg, pow_baseline);    
 
-% SPM12
-cfg.sourcemodel         = leadfield_spm12;                % Our grid and the leadfield
-cfg.headmodel           = headmodel_spm12;                % our headmodel (tells us how the magnetic field/electrical potential is propagated)
-dics_combined_spm12 = ft_sourceanalysis(cfg, pow_combined);    
-cfg.sourcemodel.filter = dics_combined_spm12.avg.filter;    
-dics_desy_spm12 = ft_sourceanalysis(cfg, pow_desync);
-dics_base_spm12 = ft_sourceanalysis(cfg, pow_baseline);    
+% Template
+cfg.sourcemodel         = leadfield_tmp;
+cfg.headmodel           = headmodel_tmp;
+dics_combined_tmp = ft_sourceanalysis(cfg, pow_combined);
+cfg.sourcemodel.filter = dics_combined_tmp.avg.filter; 
+dics_desy_tmp = ft_sourceanalysis(cfg, pow_desync);
+dics_base_tmp = ft_sourceanalysis(cfg, pow_baseline);
     
-%% **Plots**
+%% Contrast
 cfg = [];
 cfg.operation   = '(x1-x2)/(x1+x2)';
 cfg.parameter   = 'pow';
 contrast_orig = ft_math(cfg, dics_desy_orig, dics_base_orig);
-contrast_spm12 = ft_math(cfg, dics_desy_spm12, dics_base_spm12);
+contrast_tmp = ft_math(cfg, dics_desy_tmp, dics_base_tmp);
+
+%% Save
+save(fullfile(data_path, 'dics_contrasts'), 'contrast_tmp', 'contrast_orig');
 
 %% Load resliced MRI
-load('mri_orig_rs.mat')
-load('mri_spm12_rs.mat')
+load(fullfile(data_path, 'mri_tmp_resliced.mat'));
+load(fullfile(data_path, 'mri_org_resliced.mat'));
 
-%% Orig
+%% Plot original result
 cfg = [];
-cfg.downsample = 2;
-cfg.parameter = 'pow';
-beam_int_orig = ft_sourceinterpolate(cfg, contrast_orig, mri_orig_rs);
+cfg.downsample  = 2;
+cfg.parameter   = 'pow';
+beam_int_orig = ft_sourceinterpolate(cfg, contrast_orig, mri_org_resliced);
 [~, idx] = min(beam_int_orig.pow);
 
 cfg = [];
-cfg.method = 'ortho';
+cfg.method       = 'ortho';
 cfg.funparameter = 'pow';
 cfg.location = beam_int_orig.pos(idx,:);
 
 ft_sourceplot(cfg, beam_int_orig);
 
-%% Plot spm12
+%% Plot template result
 cfg = [];
-cfg.downsample = 2;
-cfg.parameter = 'pow';
-beam_int_spm12 = ft_sourceinterpolate(cfg, contrast_spm12, mri_spm12_rs);
-[~, idx] = min(beam_int_spm12.pow);
+cfg.downsample  = 2;
+cfg.parameter   = 'pow';
+beam_int_tmp = ft_sourceinterpolate(cfg, contrast_tmp, mri_tmp_resliced);
+[~, idx] = min(beam_int_tmp.pow);
 
 cfg = [];
-cfg.method = 'ortho';
+cfg.method       = 'ortho';
 cfg.funparameter = 'pow';
-cfg.location = beam_int_spm12.pos(idx,:);
+cfg.location = beam_int_tmp.pos(idx,:);
 
-ft_sourceplot(cfg, beam_int_spm12);    
+ft_sourceplot(cfg, beam_int_tmp);    
 
+%% Compare (/move to another scritpt)
+load(fullfile(data_path, 'dics_contrasts'))
 
-%% 
-save('dics_plots', 'beam_int_spm12', 'beam_int_orig')
-    
+dat = [contrast_orig.pow(contrast_orig.inside)';
+       contrast_tmp.pow(contrast_tmp.inside)'];
+   
+fprintf('Calculating alpha... ')
+a_dics = kriAlpha(dat, 'interval')
+disp('done')
+
+save(fullfile(data_path,'a_dics'), 'a_dics');
+
+%END
