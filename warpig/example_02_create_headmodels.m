@@ -11,7 +11,7 @@ ft_defaults
 %% Compute paths
 subjs = {'0177','MC','RO'};
 
-subj = 2;
+subj = 1;
 
 raw_folder = '/home/share/workshop_source_reconstruction/20180206/MEG/NatMEG_0177/170424';
 data_path  = fullfile('/home/mikkel/mri_scripts/warpig/data/',subjs{subj});

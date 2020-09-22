@@ -31,10 +31,6 @@ sub_path = fullfile(out_folder, subjs{1});
 raw_fpath = fullfile(mri_path, '00000001.dcm');
 mri_orig = ft_read_mri(raw_fpath);
 
-% % TEST (REMOVE)
-% mri_orig.anatomy = mri_orig.anatomy/20;
-% mri_orig.anatomy(mri_orig.anatomy > 250) = 250;
-
 % Define coordinates of raw (r-a-s-n)
 mri_orig = ft_determine_coordsys(mri_orig, 'interactive', 'yes');
 
@@ -147,7 +143,6 @@ ft_sourceplot([],mri_warp2acpc); title('Warped template to subject')
 saveas(gcf, fullfile(sub_path, ['template2',cfg.templatecoordsys,'.pdf']))
 close
       
-      
 %% Normalise template -> subject (neuromag subject template)
 cfg = [];
 cfg.nonlinear        = 'yes';       % Non-linear warping
@@ -192,12 +187,21 @@ disp('done')
 %% Preapre for Freesurfer
 % Save in mgz format in a Freesurfer suubject directory to run Freesurfer's
 % recon-all later (only works on Linux).
+load(fullfile(sub_path,'mri_warp2acpc.mat'))
 fs_subjdir = '/home/mikkel/mri_scripts/warpig/fs_subjects_dir/';
 
+% Warped
 cfg = [];
-cfg.filename    = fullfile(fs_subjdir, subjs{1}, 'mri','orig', '001');
+cfg.filename    = fullfile(fs_subjdir, '0177warp', 'mri','orig', '001');
 cfg.filetype    = 'mgz';
 cfg.parameter   = 'anatomy';
 ft_volumewrite(cfg, mri_warp2acpc);
+
+% Origninal
+cfg = [];
+cfg.filename    = fullfile(fs_subjdir, '0177', 'mri','orig', '001');
+cfg.filetype    = 'mgz';
+cfg.parameter   = 'anatomy';
+ft_volumewrite(cfg, mri_acpc_resliced);
 
 % END

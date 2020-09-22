@@ -181,13 +181,13 @@ ft_sourceplot(cfg, beam_int_tmp);
 %% Compare (/move to another scritpt)
 load(fullfile(data_path, 'dics_contrasts'))
 
-dat = [contrast_orig.pow(contrast_orig.inside)';
-       contrast_tmp.pow(contrast_tmp.inside)'];
+dat = [round(contrast_orig.pow(contrast_orig.inside),2)';
+       round(contrast_tmp.pow(contrast_tmp.inside),2)'];
    
 fprintf('Calculating alpha... ')
 a_dics = kriAlpha(dat, 'interval')
 disp('done')
 
-save(fullfile(data_path,'a_dics'), 'a_dics');
+save(fullfile(data_path,'a_dics_redux'), 'a_dics');
 
 %END
