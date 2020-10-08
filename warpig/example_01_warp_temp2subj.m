@@ -116,7 +116,7 @@ ft_volumewrite(cfg, mri_neuromag_resliced)
 % cfg.filename    = fullfile(sub_path,'orig_ctf_rs');   % Same base filename but different format
 % ft_volumewrite(cfg, mri_ctf_resliced)
 
-%% STEP 1B: warp a template MRI to the individual "templates"
+%% STEP 2: warp a template MRI to the individual "templates"
 % In this example we load the Colin27 template (https://www.mcgill.ca/bic/software/tools-data-analysis/anatomical-mri/atlases/colin-27),
 % which comes as the standard_mri in FieldTrip. Then use
 % ft_volumenormalise to "normalise" the Colin27 template to the indivdual 
@@ -188,6 +188,8 @@ disp('done')
 % Save in mgz format in a Freesurfer suubject directory to run Freesurfer's
 % recon-all later (only works on Linux).
 load(fullfile(sub_path,'mri_warp2acpc.mat'))
+load(fullfile(sub_path, 'mri_orig.mat'))
+
 fs_subjdir = '/home/mikkel/mri_scripts/warpig/fs_subjects_dir/';
 
 % Warped
@@ -202,6 +204,6 @@ cfg = [];
 cfg.filename    = fullfile(fs_subjdir, '0177', 'mri','orig', '001');
 cfg.filetype    = 'mgz';
 cfg.parameter   = 'anatomy';
-ft_volumewrite(cfg, mri_acpc_resliced);
+ft_volumewrite(cfg, mri_orig);
 
 % END
