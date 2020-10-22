@@ -71,8 +71,11 @@ plot(dip_mag_all_tmp.time, dip_mag_all_tmp.dip.rv)
 figure; hold on
 plot(dip_mag_all_orig.time, sqrt(sum(dip_mag_all_orig.dip.mom).^2))
 plot(dip_mag_all_tmp.time, sqrt(sum(dip_mag_all_tmp.dip.mom).^2))
+title('Single dipole model: magnetometers');
+legend('Original','Warped template')
+xlim([0 0.5])
 
-dat = [sqrt(sum(dip_mag_all_orig.dip.mom).^2); sqrt(sum(dip_mag_all_tmp.dip.mom).^2)]
+dat = [sqrt(sum(dip_mag_all_orig.dip.mom).^2); sqrt(sum(dip_mag_all_tmp.dip.mom).^2)];
 a_mag_all = kriAlpha(dat, 'interval')
 
 % Grads
@@ -83,11 +86,13 @@ plot(dip_grad_all_tmp.time, dip_grad_all_tmp.dip.rv)
 figure; hold on
 plot(dip_grad_all_orig.time, sqrt(sum(dip_grad_all_orig.dip.mom).^2))
 plot(dip_grad_all_tmp.time, sqrt(sum(dip_grad_all_tmp.dip.mom).^2))
+title('Single dipole model: gradiomenters')
+legend('Original','Warped template')
+xlim([0 0.5])
 
 dat = [sqrt(sum(dip_grad_all_orig.dip.mom).^2); sqrt(sum(dip_grad_all_tmp.dip.mom).^2)];
 a_grad_all = kriAlpha(dat, 'interval');
 
 save(fullfile(data_path, 'a_dips'), 'a_mag_all', 'a_grad_all')
-
 
 %END

@@ -190,4 +190,8 @@ disp('done')
 
 save(fullfile(data_path,'a_dics_redux'), 'a_dics');
 
+
+%%
+load(fullfile(data_path,'a_dics_redux'));
+
 %END

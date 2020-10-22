@@ -7,7 +7,7 @@ ft_defaults
 %% Paths
 subjs = {'0177','MC','RO'};
 
-subj = 2;
+subj = 3;
 
 data_path  = fullfile('/home/mikkel/mri_scripts/warpig/data/',subjs{subj});
 
@@ -30,7 +30,7 @@ asurf_tmp = surfaceArea(alphaShape(headmodel_tmp.bnd.pos));
 
 %% Plot headmodels
 figure; hold on
-ft_plot_headmodel(headmodel_org, 'facealpha', 0.5, 'facecolor', 'k')
+ft_plot_headmodel(headmodel_org, 'facealpha', 0.5, 'facecolor', 'r')
 ft_plot_headmodel(headmodel_tmp, 'facealpha', 0.5, 'facecolor', 'b')
 
 %%  Plot new volume as function of old volume
@@ -44,7 +44,7 @@ load(fullfile(data_path,'mri_orig_seg.mat'))
 load(fullfile(data_path,'mri_tmp_seg.mat'))
 disp('done')
 
-x = mri_orig_seg.brain(:);
+x = mri_org_seg.brain(:);
 y = mri_tmp_seg.brain(:);
 
 mean(x==y);
@@ -56,5 +56,8 @@ a_brainmask(subj) = kriAlpha(dat, 'nominal');
 disp('done')
 
 save(fullfile(data_path,'a_brainmask'), 'a_brainmask')
+
+%% Reload alpha
+load(fullfile(data_path,'a_brainmask'))
 
 %END
