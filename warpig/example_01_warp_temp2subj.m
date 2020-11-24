@@ -12,7 +12,7 @@ if ispc
     raw_folder = 'Y:/workshop_source_reconstruction/20180206';
     out_folder = 'Z:/mri_scripts/warpig/data';
 else
-    raw_folder = '/home/share/workshop_source_reconstruction/20180206';
+    raw_folder = '/home/share/workshop_source_rclceconstruction/20180206';
     out_folder = '/home/mikkel/mri_scripts/warpig/data/';
 end
 
