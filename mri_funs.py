@@ -6,12 +6,12 @@ Created on Thu Jul  4 16:25:14 2019
 @author: mikkel
 """
 
-import dicom
+import pydicom
 
 def which_scanner(fname):
     # Get manufacturer, model, and field strength of scanner for dicom file
     
-    dcm = dicom.read_file(fname)
+    dcm = pydicom.read_file(fname)
     
     model = dcm.ManufacturerModelName
     mnfct = dcm.Manufacturer
